@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Report Traffic Issue | Smart City</title>
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="theme.css">
+<script defer src="theme.js"></script>
+<script defer src="dashboard.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <h2>🏙 Smart City</h2>
+    <a href="userdashboard.html">Dashboard</a>
+    <a href="weather-aqi.html">Weather & AQI</a>
+    <a href="emergency-sos.html">Emergency SOS</a>
+    <a href="air-quality-index.html">Air Quality Index</a>
+    <a href="complaint-stats.html">Complaint Stats</a>
+    <a href="smart-assistant.html">Smart Assistant</a>
+    <a href="trending-complaints.html">Trending Complaints</a>
+    <a href="register-complaint.html">Register Complaint</a>
+    <a class="active" href="report-traffic-issue.html">Report Traffic Issue</a>
+    <a href="my-traffic-reports.html">My Traffic Reports</a>
+    <a href="my-complaints.html">My Complaints</a>
+    <a href="profile.html">Profile</a>
+</div>
+<div class="main">
+    <div id="notification" class="notification"></div>
+    <div class="page-header">
+        <div>
+            <h1>Report Traffic Issue</h1>
+            <p>Report traffic congestion, accidents or road blockages with one tap and optionally include an image.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="form-grid">
+            <div>
+                <label>Issue Type</label>
+                <select id="issueType">
+                    <option value="Traffic Jam">Traffic Jam</option>
+                    <option value="Accident">Accident</option>
+                    <option value="Signal Issue">Signal Issue</option>
+                    <option value="Road Block">Road Block</option>
+                </select>
+            </div>
+            <div>
+                <label>Location</label>
+                <input id="trafficLocation" placeholder="Address or lat,lng" />
+            </div>
+            <div>
+                <label>Description</label>
+                <textarea id="trafficDesc" placeholder="Describe the issue"></textarea>
+            </div>
+            <div>
+                <label>Attach Image</label>
+                <input id="trafficImage" type="file" accept="image/*" />
+            </div>
+        </div>
+        <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+            <button class="btn" type="button" onclick="submitTrafficReport()">Submit Traffic Issue</button>
+            <button class="btn" type="button" onclick="detectTrafficLocation()" style="background: #0ea5e9;">Auto Location</button>
+        </div>
+    </div>
+</div>
+<script>
+async function submitTrafficReport() {
+    const issueType = document.getElementById('issueType').value;
+    const description = document.getElementById('trafficDesc').value.trim();
+    const locationValue = document.getElementById('trafficLocation').value.trim();
+    const imageInput = document.getElementById('trafficImage');
+
+    if (!issueType || !description || !locationValue) {
+        showNotification('Please complete all traffic report fields.', false);
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('issueType', issueType);
+    formData.append('description', description);
+    formData.append('location', locationValue);
+    if (imageInput.files.length) {
+        formData.append('image', imageInput.files[0]);
+    }
+
+    try {
+        await fetch('/api/traffic/add', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+        });
+        showNotification('Traffic issue reported successfully.');
+        document.getElementById('trafficDesc').value = '';
+        document.getElementById('trafficLocation').value = '';
+        imageInput.value = '';
+    } catch (error) {
+        showNotification(error.message || 'Failed to report traffic issue.', false);
+    }
+}
+
+function detectTrafficLocation() {
+    if (!navigator.geolocation) {
+        showNotification('Geolocation is not supported by your browser.', false);
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            document.getElementById('trafficLocation').value = `${pos.coords.latitude}, ${pos.coords.longitude}`;
+            showNotification('Traffic location detected successfully.');
+        },
+        () => showNotification('Unable to detect location. Enter it manually.', false),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+}
+</script>
+</body>
+</html>

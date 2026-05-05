@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Traffic Reports | Smart City</title>
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="theme.css">
+<script defer src="theme.js"></script>
+<script defer src="dashboard.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <h2>🏙 Smart City</h2>
+    <a href="userdashboard.html">Dashboard</a>
+    <a href="weather-aqi.html">Weather & AQI</a>
+    <a href="emergency-sos.html">Emergency SOS</a>
+    <a href="air-quality-index.html">Air Quality Index</a>
+    <a href="complaint-stats.html">Complaint Stats</a>
+    <a href="smart-assistant.html">Smart Assistant</a>
+    <a href="trending-complaints.html">Trending Complaints</a>
+    <a href="register-complaint.html">Register Complaint</a>
+    <a href="report-traffic-issue.html">Report Traffic Issue</a>
+    <a class="active" href="my-traffic-reports.html">My Traffic Reports</a>
+    <a href="my-complaints.html">My Complaints</a>
+    <a href="profile.html">Profile</a>
+</div>
+<div class="main">
+    <div id="notification" class="notification"></div>
+    <div class="page-header">
+        <div>
+            <h1>My Traffic Reports</h1>
+            <p>Review your submitted traffic reports, status updates, and locations in one place.</p>
+        </div>
+        <button class="btn" type="button" onclick="loadTrafficReports()">Refresh</button>
+    </div>
+
+    <div class="section table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Issue</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="trafficBody"></tbody>
+        </table>
+    </div>
+</div>
+<script>
+async function loadTrafficReports() {
+    try {
+        const data = await apiFetch('/api/traffic/my');
+        const reports = Array.isArray(data) ? data : Array.isArray(data.traffic) ? data.traffic : [];
+        document.getElementById('trafficBody').innerHTML = reports.length ? reports.map(report => `
+            <tr>
+                <td>${report.issueType || '-'}</td>
+                <td>${report.location || '-'}</td>
+                <td><span class="status ${report.status ? report.status.toLowerCase().replace(/\s+/g, '-') : 'pending'}">${report.status || 'Pending'}</span></td>
+                <td>${report.createdAt ? new Date(report.createdAt).toLocaleDateString() : '-'}</td>
+            </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;padding:24px;color:#7d8fa8;">No traffic reports found.</td></tr>';
+    } catch (error) {
+        showNotification(error.message || 'Unable to load traffic reports.', false);
+    }
+}
+
+window.addEventListener('load', () => {
+    loadTrafficReports();
+});
+</script>
+</body>
+</html>

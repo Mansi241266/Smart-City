@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Complaints | Smart City</title>
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="theme.css">
+<script defer src="theme.js"></script>
+<script defer src="dashboard.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <h2>🏙 Smart City</h2>
+    <a href="userdashboard.html">Dashboard</a>
+    <a href="weather-aqi.html">Weather & AQI</a>
+    <a href="emergency-sos.html">Emergency SOS</a>
+    <a href="air-quality-index.html">Air Quality Index</a>
+    <a href="complaint-stats.html">Complaint Stats</a>
+    <a href="smart-assistant.html">Smart Assistant</a>
+    <a href="trending-complaints.html">Trending Complaints</a>
+    <a href="register-complaint.html">Register Complaint</a>
+    <a href="report-traffic-issue.html">Report Traffic Issue</a>
+    <a href="my-traffic-reports.html">My Traffic Reports</a>
+    <a class="active" href="my-complaints.html">My Complaints</a>
+    <a href="profile.html">Profile</a>
+</div>
+<div class="main">
+    <div id="notification" class="notification"></div>
+    <div class="page-header">
+        <div>
+            <h1>My Complaints</h1>
+            <p>Track the status of your city complaints, view votes, and review the latest updates.</p>
+        </div>
+        <button class="btn" type="button" onclick="loadComplaints()">Refresh</button>
+    </div>
+
+    <div class="section table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Location</th>
+                    <th>Category</th>
+                    <th>Votes</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="complaintsBody"></tbody>
+        </table>
+    </div>
+</div>
+<script>
+async function loadComplaints() {
+    try {
+        const data = await apiFetch('/api/complaint/my');
+        const complaints = Array.isArray(data) ? data : Array.isArray(data.complaints) ? data.complaints : [];
+        document.getElementById('complaintsBody').innerHTML = complaints.length ? complaints.map(c => `
+            <tr>
+                <td>${c.title || '-'}</td>
+                <td>${(c.description || '-').slice(0, 100)}${(c.description || '').length > 100 ? '...' : ''}</td>
+                <td>${c.location || '-'}</td>
+                <td>${c.category || '-'}</td>
+                <td>${c.votes || 0}</td>
+                <td><span class="status ${c.status ? c.status.toLowerCase().replace(/\s+/g, '-') : 'pending'}">${c.status || 'Pending'}</span></td>
+                <td>${c.createdAt ? new Date(c.createdAt).toLocaleDateString() : '-'}</td>
+            </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:24px;color:#7d8fa8;">No complaints found.</td></tr>';
+    } catch (error) {
+        showNotification(error.message || 'Unable to load complaints.', false);
+    }
+}
+
+window.addEventListener('load', () => {
+    loadComplaints();
+});
+</script>
+</body>
+</html>

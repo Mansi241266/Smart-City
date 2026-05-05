@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather & AQI | Smart City</title>
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="theme.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script defer src="theme.js"></script>
+<script defer src="dashboard.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <h2>🏙 Smart City</h2>
+    <a href="userdashboard.html">Dashboard</a>
+    <a class="active" href="weather-aqi.html">Weather & AQI</a>
+    <a href="emergency-sos.html">Emergency SOS</a>
+    <a href="air-quality-index.html">Air Quality Index</a>
+    <a href="complaint-stats.html">Complaint Stats</a>
+    <a href="smart-assistant.html">Smart Assistant</a>
+    <a href="trending-complaints.html">Trending Complaints</a>
+    <a href="register-complaint.html">Register Complaint</a>
+    <a href="report-traffic-issue.html">Report Traffic Issue</a>
+    <a href="my-traffic-reports.html">My Traffic Reports</a>
+    <a href="my-complaints.html">My Complaints</a>
+    <a href="profile.html">Profile</a>
+</div>
+<div class="main">
+    <div id="notification" class="notification"></div>
+    <div class="page-header">
+        <div>
+            <h1>Weather & AQI</h1>
+            <p>Track current weather conditions and air quality for your location, updated in real time.</p>
+        </div>
+        <button class="btn" type="button" onclick="loadWeatherAndAqi()">Refresh All</button>
+    </div>
+
+    <div class="cards-grid">
+        <div class="card">
+            <h2>Live Weather</h2>
+            <p id="weatherCondition">Condition: -</p>
+            <p id="weatherTemp">Temperature: -</p>
+            <p id="weatherHumidity">Humidity: -</p>
+            <p id="weatherWind">Wind: -</p>
+            <p id="weatherAlert">Alert: -</p>
+            <button class="btn" type="button" onclick="loadWeatherForCurrentLocation()">Refresh Weather</button>
+        </div>
+        <div class="card">
+            <h2>Current AQI</h2>
+            <p id="aqiValue">AQI: -</p>
+            <p id="aqiStatus">Status: -</p>
+            <p id="aqiLocation">Location: -</p>
+            <p id="aqiSuggestion">Suggestion: -</p>
+            <button class="btn" type="button" onclick="loadAqiForCurrentLocation()">Refresh AQI</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>7-Day AQI Trend</h2>
+        <canvas id="aqiChart" style="max-height: 360px;"></canvas>
+    </div>
+</div>
+<script>
+let aqiChartInstance = null;
+
+async function loadWeather(lat, lon) {
+    try {
+        const data = await apiFetch(`/api/weather?lat=${lat}&lon=${lon}`);
+        document.getElementById('weatherCondition').innerText = `Condition: ${data.condition || '-'} (${data.description || '-'})`;
+        document.getElementById('weatherTemp').innerText = `Temperature: ${data.temperature ?? '-'} °C`;
+        document.getElementById('weatherHumidity').innerText = `Humidity: ${data.humidity ?? '-'}%`;
+        document.getElementById('weatherWind').innerText = `Wind: ${data.windSpeed ?? '-'} m/s`;
+        document.getElementById('weatherAlert').innerText = `Alert: ${data.rainAlert || 'No rain expected.'}`;
+    } catch (error) {
+        showNotification(error.message || 'Unable to load weather data.', false);
+    }
+}
+
+async function loadAqi(lat, lon) {
+    try {
+        const data = await apiFetch(`/api/aqi?lat=${lat}&lon=${lon}`);
+        document.getElementById('aqiValue').innerText = `AQI: ${data.aqi ?? '-'}`;
+        document.getElementById('aqiStatus').innerText = `Status: ${data.category || '-'}`;
+        document.getElementById('aqiLocation').innerText = `Location: ${data.location || '-'}`;
+        document.getElementById('aqiSuggestion').innerText = `Suggestion: ${data.suggestion || '-'}`;
+        if (data.color) {
+            document.getElementById('aqiStatus').style.color = data.color;
+        }
+    } catch (error) {
+        showNotification(error.message || 'Unable to load AQI data.', false);
+    }
+}
+
+function renderAqiTrend(records) {
+    const labels = records.map(item => new Date(item.createdAt).toLocaleDateString());
+    const values = records.map(item => item.aqi || 0);
+    if (aqiChartInstance) {
+        aqiChartInstance.destroy();
+    }
+    aqiChartInstance = new Chart(document.getElementById('aqiChart'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'AQI',
+                data: values,
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37,99,235,0.18)',
+                fill: true,
+                tension: 0.25,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: 300,
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+async function loadAqiHistory() {
+    try {
+        const data = await apiFetch('/api/aqi/history');
+        const records = Array.isArray(data.records) ? data.records : [];
+        if (records.length) {
+            renderAqiTrend(records);
+        }
+    } catch (error) {
+        console.warn('AQI history unavailable:', error);
+    }
+}
+
+function updateLocationStatus(message, success = true) {
+    showNotification(message, success);
+}
+
+function loadGeoData(callback) {
+    if (!navigator.geolocation) {
+        updateLocationStatus('Geolocation is not supported by your browser.', false);
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        position => callback(position.coords.latitude, position.coords.longitude),
+        () => updateLocationStatus('Unable to detect location. Please allow access.', false),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+}
+
+function loadWeatherForCurrentLocation() {
+    loadGeoData(loadWeather);
+}
+
+function loadAqiForCurrentLocation() {
+    loadGeoData(async (lat, lon) => {
+        await loadAqi(lat, lon);
+        await loadAqiHistory();
+    });
+}
+
+async function loadWeatherAndAqi() {
+    loadGeoData(async (lat, lon) => {
+        await Promise.all([loadWeather(lat, lon), loadAqi(lat, lon), loadAqiHistory()]);
+    });
+}
+
+window.addEventListener('load', () => {
+    loadWeatherAndAqi();
+});
+</script>
+</body>
+</html>

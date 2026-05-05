@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Complaint Stats | Smart City</title>
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="theme.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script defer src="theme.js"></script>
+<script defer src="dashboard.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <h2>🏙 Smart City</h2>
+    <a href="userdashboard.html">Dashboard</a>
+    <a href="weather-aqi.html">Weather & AQI</a>
+    <a href="emergency-sos.html">Emergency SOS</a>
+    <a href="air-quality-index.html">Air Quality Index</a>
+    <a class="active" href="complaint-stats.html">Complaint Stats</a>
+    <a href="smart-assistant.html">Smart Assistant</a>
+    <a href="trending-complaints.html">Trending Complaints</a>
+    <a href="register-complaint.html">Register Complaint</a>
+    <a href="report-traffic-issue.html">Report Traffic Issue</a>
+    <a href="my-traffic-reports.html">My Traffic Reports</a>
+    <a href="my-complaints.html">My Complaints</a>
+    <a href="profile.html">Profile</a>
+</div>
+<div class="main">
+    <div id="notification" class="notification"></div>
+    <div class="page-header">
+        <div>
+            <h1>Complaint Stats</h1>
+            <p>View the current status summary of your complaints with a clean, interactive dashboard view.</p>
+        </div>
+        <button class="btn" type="button" onclick="loadStats()">Refresh Stats</button>
+    </div>
+
+    <div class="cards-grid">
+        <div class="card">
+            <h2>Total Complaints</h2>
+            <p id="totalCount">0</p>
+        </div>
+        <div class="card">
+            <h2>Resolved</h2>
+            <p id="resolvedCount">0</p>
+        </div>
+        <div class="card">
+            <h2>Pending</h2>
+            <p id="pendingCount">0</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Resolution Overview</h2>
+        <canvas id="statsChart" style="max-height: 360px;"></canvas>
+    </div>
+</div>
+<script>
+let statsChart = null;
+
+async function loadStats() {
+    try {
+        const data = await apiFetch('/api/user/dashboard');
+        document.getElementById('totalCount').innerText = data.total || 0;
+        document.getElementById('resolvedCount').innerText = data.resolved || 0;
+        document.getElementById('pendingCount').innerText = data.pending || 0;
+
+        if (statsChart) {
+            statsChart.destroy();
+        }
+
+        statsChart = new Chart(document.getElementById('statsChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Resolved', 'Pending'],
+                datasets: [{
+                    data: [data.resolved || 0, data.pending || 0],
+                    backgroundColor: ['#22c55e', '#f59e0b'],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    } catch (error) {
+        showNotification(error.message || 'Unable to load complaint stats.', false);
+    }
+}
+
+window.addEventListener('load', () => {
+    loadStats();
+});
+</script>
+</body>
+</html>

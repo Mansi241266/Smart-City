@@ -1,0 +1,31 @@
+complaint,category,priority
+Pothole on main street causing damage to vehicles,Road Maintenance,High
+Broken street light in residential area,Street Light,Medium
+Water leakage from main pipeline,Water Supply,High
+Garbage not collected from neighborhood,Waste Management,Medium
+Noise pollution from nearby construction,Pollution,Medium
+Damaged sidewalk is unsafe for pedestrians,Road Maintenance,High
+Tree branches blocking road visibility,Tree Maintenance,Medium
+Malfunctioning traffic light at intersection,Traffic Management,High
+Flooding in basement due to poor drainage,Water Supply,High
+Illegal parking blocking emergency zone,Traffic Management,Medium
+Damaged road marks need repainting,Road Maintenance,Low
+Missing manhole cover is dangerous,Road Maintenance,High
+Overflowing sewer causing bad smell,Water Supply,High
+Street vendor blocking public pathway,Public Safety,Medium
+Broken lamppost needs replacement,Street Light,Medium
+Dangerous intersection needs safety improvement,Traffic Management,High
+Excessive dust from construction site,Pollution,Medium
+Broken bench in public park,Public Facilities,Low
+Missing street sign for directions,Traffic Management,Low
+Water bill seems incorrect,Water Supply,Medium
+Rat infestation in residential area,Pest Control,High
+Broken railing in public staircase,Public Safety,High
+Inadequate parking spaces,Traffic Management,Medium
+Power outage lasting several hours,Power Supply,High
+Uncovered manhole is dangerous,Public Safety,High
+Poor quality of road surface,Road Maintenance,Medium
+Street not cleaned for weeks,Waste Management,Medium
+Broken escalator in metro station,Public Facilities,High
+Contaminated water supply,Water Supply,High
+Damaged cycling path,Road Maintenance,Medium

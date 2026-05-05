@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Assistant | Smart City</title>
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="theme.css">
+<script defer src="theme.js"></script>
+<script defer src="dashboard.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <h2>🏙 Smart City</h2>
+    <a href="userdashboard.html">Dashboard</a>
+    <a href="weather-aqi.html">Weather & AQI</a>
+    <a href="emergency-sos.html">Emergency SOS</a>
+    <a href="air-quality-index.html">Air Quality Index</a>
+    <a href="complaint-stats.html">Complaint Stats</a>
+    <a class="active" href="smart-assistant.html">Smart Assistant</a>
+    <a href="trending-complaints.html">Trending Complaints</a>
+    <a href="register-complaint.html">Register Complaint</a>
+    <a href="report-traffic-issue.html">Report Traffic Issue</a>
+    <a href="my-traffic-reports.html">My Traffic Reports</a>
+    <a href="my-complaints.html">My Complaints</a>
+    <a href="profile.html">Profile</a>
+</div>
+<div class="main">
+    <div id="notification" class="notification"></div>
+    <div class="page-header">
+        <div>
+            <h1>Smart Assistant</h1>
+            <p>Get guidance on using the app, registering complaints, and reporting city issues quickly.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="assistant-box">
+            <div id="assistantLog" class="assistant-log"></div>
+            <div class="assistant-input-row">
+                <input id="assistantInput" placeholder="Ask: How can I report a traffic issue?" />
+                <button class="btn" type="button" onclick="sendAssistantMessage()">Ask</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+const assistantLog = document.getElementById('assistantLog');
+const assistantInput = document.getElementById('assistantInput');
+
+function addAssistantMessage(role, message) {
+    const item = document.createElement('div');
+    item.className = `assistant-message ${role}`;
+    item.innerText = `${role === 'user' ? 'You:' : 'Assistant:'} ${message}`;
+    assistantLog.appendChild(item);
+    assistantLog.scrollTop = assistantLog.scrollHeight;
+}
+
+function getAssistantResponse(query) {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) {
+        return 'Please ask a question about weather, AQI, complaints, SOS, or traffic reporting.';
+    }
+    if (normalized.includes('water')) {
+        return 'Report water-related issues by choosing the complaint form and describing the exact location clearly.';
+    }
+    if (normalized.includes('register') || normalized.includes('help') || normalized.includes('complaint')) {
+        return 'Use the Register Complaint page, fill in title, description, location, and optionally upload an image.';
+    }
+    if (normalized.includes('sos') || normalized.includes('emergency')) {
+        return 'The Emergency SOS page sends a quick alert to authorities with your location. Use it when urgent help is required.';
+    }
+    if (normalized.includes('traffic')) {
+        return 'Report traffic jams, accidents, or roadblocks on the Report Traffic Issue page. You can attach a photo and location.';
+    }
+    if (normalized.includes('aqi') || normalized.includes('pollution')) {
+        return 'The Air Quality Index page shows current AQI readings and health guidance for outdoor activity.';
+    }
+    if (normalized.includes('weather') || normalized.includes('forecast')) {
+        return 'The Weather & AQI page gives you current temperature, humidity, wind conditions, and air quality.';
+    }
+    if (normalized.includes('trend') || normalized.includes('trending')) {
+        return 'Trending Complaints shows the most voted issues so you can quickly see the city’s top concerns.';
+    }
+    return 'I can help with app usage, complaint reporting, SOS alerts, traffic issues, and air quality safety. Ask something specific.';
+}
+
+function sendAssistantMessage() {
+    const message = assistantInput.value.trim();
+    if (!message) {
+        showNotification('Enter a question for the assistant.', false);
+        return;
+    }
+    addAssistantMessage('user', message);
+    addAssistantMessage('bot', getAssistantResponse(message));
+    assistantInput.value = '';
+}
+</script>
+</body>
+</html>

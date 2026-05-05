@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register Complaint | Smart City</title>
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="theme.css">
+<script defer src="theme.js"></script>
+<script defer src="dashboard.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <h2>🏙 Smart City</h2>
+    <a href="userdashboard.html">Dashboard</a>
+    <a href="weather-aqi.html">Weather & AQI</a>
+    <a href="emergency-sos.html">Emergency SOS</a>
+    <a href="air-quality-index.html">Air Quality Index</a>
+    <a href="complaint-stats.html">Complaint Stats</a>
+    <a href="smart-assistant.html">Smart Assistant</a>
+    <a href="trending-complaints.html">Trending Complaints</a>
+    <a class="active" href="register-complaint.html">Register Complaint</a>
+    <a href="report-traffic-issue.html">Report Traffic Issue</a>
+    <a href="my-traffic-reports.html">My Traffic Reports</a>
+    <a href="my-complaints.html">My Complaints</a>
+    <a href="profile.html">Profile</a>
+</div>
+<div class="main">
+    <div id="notification" class="notification"></div>
+    <div class="page-header">
+        <div>
+            <h1>Register Complaint</h1>
+            <p>Submit a new issue with details, location and optional images so the city team can respond quickly.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="form-grid">
+            <div>
+                <label>Title</label>
+                <input id="title" placeholder="Enter complaint title" />
+            </div>
+            <div>
+                <label>Location</label>
+                <input id="location" placeholder="Address or lat,lng" />
+            </div>
+            <div>
+                <label>Description</label>
+                <textarea id="desc" placeholder="Describe the issue in detail"></textarea>
+            </div>
+            <div>
+                <label>Attach Image</label>
+                <input id="image" type="file" accept="image/*" />
+            </div>
+        </div>
+        <div class="cards-grid" style="margin-top: 20px;">
+            <div class="card">
+                <h3>Detected Category</h3>
+                <p id="categoryDisplay">General</p>
+            </div>
+            <div class="card">
+                <h3>Suggested Priority</h3>
+                <p id="priorityDisplay">Medium</p>
+            </div>
+        </div>
+        <button class="btn" type="button" onclick="submitComplaint()">Submit Complaint</button>
+        <button class="btn" type="button" onclick="detectLocation()" style="background: #0ea5e9;">Auto Location</button>
+    </div>
+</div>
+<script>
+let forcedCategory = null;
+let forcedPriority = null;
+
+function detectLocation() {
+    if (!navigator.geolocation) {
+        showNotification('Geolocation is not supported by your browser.', false);
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            document.getElementById('location').value = `${pos.coords.latitude}, ${pos.coords.longitude}`;
+            showNotification('Location added successfully.');
+        },
+        () => showNotification('Unable to detect location. Please enter it manually.', false),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+}
+
+async function submitComplaint() {
+    const title = document.getElementById('title').value.trim();
+    const description = document.getElementById('desc').value.trim();
+    const locationValue = document.getElementById('location').value.trim();
+    const imageInput = document.getElementById('image');
+
+    if (!title || !description || !locationValue) {
+        showNotification('Please fill in title, description, and location.', false);
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('location', locationValue);
+    if (imageInput.files.length) {
+        formData.append('image', imageInput.files[0]);
+    }
+
+    let categoryText = forcedCategory || 'General';
+    let priorityText = forcedPriority || 'Medium';
+
+    try {
+        const mlRes = await fetch('http://localhost:5001/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ complaint: description }),
+        });
+        if (mlRes.ok) {
+            const ml = await mlRes.json();
+            categoryText = ml.category || categoryText;
+            priorityText = ml.priority || priorityText;
+        }
+    } catch (error) {
+        console.warn('ML service unavailable, using fallback values.', error);
+    }
+
+    document.getElementById('categoryDisplay').innerText = categoryText;
+    document.getElementById('priorityDisplay').innerText = priorityText;
+
+    formData.append('category', categoryText);
+    formData.append('priority', priorityText);
+
+    try {
+        await apiFetch('/api/complaint/add', {
+            method: 'POST',
+            body: formData,
+        });
+        showNotification('Complaint submitted successfully.');
+        document.getElementById('title').value = '';
+        document.getElementById('desc').value = '';
+        document.getElementById('location').value = '';
+        imageInput.value = '';
+    } catch (error) {
+        showNotification(error.message || 'Unable to submit complaint.', false);
+    }
+}
+</script>
+</body>
+</html>

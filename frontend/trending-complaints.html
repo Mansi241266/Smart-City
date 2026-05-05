@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trending Complaints | Smart City</title>
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="theme.css">
+<script defer src="theme.js"></script>
+<script defer src="dashboard.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <h2>🏙 Smart City</h2>
+    <a href="userdashboard.html">Dashboard</a>
+    <a href="weather-aqi.html">Weather & AQI</a>
+    <a href="emergency-sos.html">Emergency SOS</a>
+    <a href="air-quality-index.html">Air Quality Index</a>
+    <a href="complaint-stats.html">Complaint Stats</a>
+    <a href="smart-assistant.html">Smart Assistant</a>
+    <a class="active" href="trending-complaints.html">Trending Complaints</a>
+    <a href="register-complaint.html">Register Complaint</a>
+    <a href="report-traffic-issue.html">Report Traffic Issue</a>
+    <a href="my-traffic-reports.html">My Traffic Reports</a>
+    <a href="my-complaints.html">My Complaints</a>
+    <a href="profile.html">Profile</a>
+</div>
+<div class="main">
+    <div id="notification" class="notification"></div>
+    <div class="page-header">
+        <div>
+            <h1>Trending Complaints</h1>
+            <p>See the most upvoted city issues so you can stay aware of priorities and ongoing community concerns.</p>
+        </div>
+        <button class="btn" type="button" onclick="loadTrendingComplaints()">Refresh</button>
+    </div>
+
+    <div class="section table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Votes</th>
+                </tr>
+            </thead>
+            <tbody id="trendingBody"></tbody>
+        </table>
+    </div>
+</div>
+<script>
+async function loadTrendingComplaints() {
+    try {
+        const data = await apiFetch('/api/complaint/trending');
+        const complaints = Array.isArray(data.complaints) ? data.complaints : [];
+        const body = document.getElementById('trendingBody');
+        body.innerHTML = complaints.length ? complaints.map(item => `
+            <tr>
+                <td>${item.title || '-'}</td>
+                <td>${item.category || '-'}</td>
+                <td>${item.votes || 0}</td>
+            </tr>`).join('') : '<tr><td colspan="3" style="text-align:center;padding:18px;color:#7d8fa8;">No trending complaints found yet.</td></tr>';
+    } catch (error) {
+        showNotification(error.message || 'Unable to load trending complaints.', false);
+    }
+}
+
+window.addEventListener('load', () => {
+    loadTrendingComplaints();
+});
+</script>
+</body>
+</html>

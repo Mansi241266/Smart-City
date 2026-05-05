@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart City - Services</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="theme.css">
+<script defer src="theme.js"></script>
+<style>
+:root {--primary:#2c3e50;--secondary:#00cec9;--accent:#e74c3c;--light:#ecf0f1;--shadow:0 4px 10px rgba(0,0,0,0.1);}
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI",sans-serif;}
+body{background:#f9f9f9;}
+header{background:white;position:sticky;top:0;z-index:1000;box-shadow:var(--shadow);}
+.container{width:90%;max-width:1200px;margin:auto;}
+.header-container{display:flex;justify-content:space-between;align-items:center;padding:20px 0;}
+.logo{font-size:24px;font-weight:bold;color:var(--primary);}
+.logo span{color:var(--secondary);}
+nav ul{display:flex;list-style:none;gap:25px;}
+nav a{text-decoration:none;color:var(--primary);font-weight:600;}
+nav a:hover{color:var(--secondary);}
+.auth{display:flex;gap:10px;}
+.btn{padding:10px 20px;border-radius:25px;cursor:pointer;border:none;font-weight:600;transition:0.3s;}
+.btn-primary{background:var(--secondary);color:white;}
+.btn-primary:hover{transform:translateY(-2px);}
+.btn-outline{border:2px solid var(--secondary);background:transparent;color:var(--secondary);}
+.btn-outline:hover{background:var(--secondary);color:white;}
+.section{padding:70px 0;}
+.section-title{text-align:center;margin-bottom:40px;}
+.section-title h2{font-size:2.5rem;}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:25px;}
+.card{background:white;padding:25px;border-radius:10px;text-align:center;box-shadow:var(--shadow);transition:0.3s;}
+.card:hover{transform:translateY(-10px);}
+.icon{font-size:40px;color:var(--secondary);margin-bottom:10px;}
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:25px;}
+.feature{background:white;padding:25px;border-radius:14px;box-shadow:var(--shadow);}
+.feature strong{display:block;margin-bottom:12px;color:var(--primary);}
+footer{background:var(--primary);color:white;text-align:center;padding:20px;}
+@media(max-width:768px){nav ul{display:none;}}
+</style>
+</head>
+<body>
+<header>
+<div class="container header-container">
+    <div class="logo">Smart<span>City</span></div>
+    <nav>
+        <ul>
+            <li><a href="home.html">Home</a></li>
+            <li><a href="services.html">Services</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="connect.html">Connect</a></li>
+        </ul>
+    </nav>
+    <div class="auth">
+        <button class="btn btn-outline" onclick="location.href='userlogin.html'">Login</button>
+        <button class="btn btn-primary" onclick="location.href='usersignup.html'">Signup</button>
+    </div>
+</div>
+</header>
+<section class="section">
+<div class="container">
+<div class="section-title"><h2>Services for Citizens</h2></div>
+<div class="cards">
+    <div class="card"><div class="icon"><i class="fas fa-file-alt"></i></div><h3>Report Issues</h3><p>Submit complaints for roads, sanitation, water, power and pollution with just a few clicks.</p></div>
+    <div class="card"><div class="icon"><i class="fas fa-robot"></i></div><h3>AI Classification</h3><p>Automatic category prediction and priority assignment using machine learning.</p></div>
+    <div class="card"><div class="icon"><i class="fas fa-map-pin"></i></div><h3>Live Tracking</h3><p>View incident locations and traffic alerts on an interactive city map.</p></div>
+</div>
+</div>
+</section>
+<section class="section" style="background:#ecf0f1;">
+<div class="container">
+<div class="section-title"><h2>Services for Administrators</h2></div>
+<div class="features">
+    <div class="feature"><strong>Admin Dashboard</strong><p>Manage complaints, traffic reports and user activity from one console.</p></div>
+    <div class="feature"><strong>Analytics</strong><p>Monitor AQI, traffic patterns and complaint trends with charts and statistics.</p></div>
+    <div class="feature"><strong>Real-time Alerts</strong><p>Receive notifications for SOS calls, critical complaints and emergency incidents.</p></div>
+</div>
+</div>
+</section>
+<section class="section">
+<div class="container">
+<div class="section-title"><h2>Emergency & Citizen Support</h2></div>
+<div class="cards">
+    <div class="card"><div class="icon"><i class="fas fa-siren-on"></i></div><h3>SOS Alerts</h3><p>Instant emergency signal service for citizen safety and quick responses.</p></div>
+    <div class="card"><div class="icon"><i class="fas fa-paper-plane"></i></div><h3>Notifications</h3><p>SMS and email alerts keep users informed about complaint progress.</p></div>
+    <div class="card"><div class="icon"><i class="fas fa-shield-alt"></i></div><h3>Secure Access</h3><p>Protected authentication for users and admins with role-based permissions.</p></div>
+</div>
+</div>
+</section>
+<footer><p>© 2026 Smart City Project | Developed by Komal and Mansi</p></footer>
+</body>
+</html>

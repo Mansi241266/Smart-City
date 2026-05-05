@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart City - Connect Government</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="theme.css">
+<script defer src="theme.js"></script>
+<style>
+:root {--primary:#2c3e50;--secondary:#00cec9;--accent:#e74c3c;--light:#f7fafc;--shadow:0 8px 24px rgba(0,0,0,0.08);} 
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI",sans-serif;}
+body{background:#f3f6fb;color:#2c3e50;}
+header{background:white;position:sticky;top:0;z-index:1000;box-shadow:0 8px 20px rgba(0,0,0,0.08);}
+.container{width:90%;max-width:1200px;margin:auto;}
+.header-container{display:flex;justify-content:space-between;align-items:center;padding:18px 0;}
+.logo{display:flex;align-items:center;gap:10px;font-size:24px;font-weight:800;color:var(--primary);}
+.logo img{height:44px;width:auto;}
+nav ul{display:flex;list-style:none;gap:22px;}
+nav a{text-decoration:none;color:#2c3e50;font-weight:600;}
+nav a.active, nav a:hover{color:var(--secondary);}
+.auth{display:flex;gap:10px;}
+.btn{padding:10px 20px;border-radius:25px;border:none;cursor:pointer;font-weight:600;transition:.25s;}
+.btn-primary{background:var(--secondary);color:white;}
+.btn-primary:hover{transform:translateY(-2px);}
+.btn-outline{background:transparent;border:2px solid var(--secondary);color:var(--secondary);}
+.btn-outline:hover{background:var(--secondary);color:white;}
+.main{padding:60px 0;}
+.section-title{text-align:center;margin-bottom:36px;}
+.section-title h2{font-size:2.7rem;}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:32px;}
+.card{background:white;border-radius:24px;box-shadow:var(--shadow);padding:32px;}
+.card h3{margin-bottom:18px;}
+.card label{display:block;font-weight:700;margin-bottom:10px;}
+.card input, .card select, .card textarea{width:100%;padding:14px 16px;margin-bottom:18px;border:1px solid #d9e2ec;border-radius:14px;outline:none;font-size:1rem;}
+.card textarea{min-height:170px;resize:vertical;}
+.notification{display:none;margin-bottom:20px;padding:14px 18px;border-radius:14px;font-weight:600;}
+.list{display:grid;gap:16px;}
+.request-item{background:#fdfcff;border:1px solid #e4f0ff;border-radius:18px;padding:20px;}
+.request-item h4{margin-bottom:8px;}
+.request-item p{margin:6px 0;color:#475569;}
+.request-item .meta{display:flex;flex-wrap:wrap;gap:12px;font-size:.95rem;color:#64748b;margin-top:10px;}
+.how-it-works{
+    margin-top:60px;
+    text-align:center;
+    padding:40px 20px;
+}
+.how-it-works h2{
+    font-size:32px;
+    margin-bottom:10px;
+}
+.subtitle{
+    color:#777;
+    margin-bottom:30px;
+}
+.steps{
+    display:flex;
+    justify-content:center;
+    gap:30px;
+    flex-wrap:wrap;
+}
+.step{
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    width:260px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.1);
+    transition:0.3s;
+}
+.step:hover{
+    transform:translateY(-8px);
+}
+.step .icon{
+    font-size:40px;
+    margin-bottom:15px;
+}
+.step h3{
+    margin-bottom:10px;
+    color:#2c3e50;
+}
+.step p{
+    color:#555;
+    font-size:14px;
+}
+footer{background:#172b4d;color:white;text-align:center;padding:20px;}
+@media(max-width:980px){.grid{grid-template-columns:1fr;}}
+@media(max-width:700px){nav ul{display:none;}}
+</style>
+</head>
+<body>
+<header>
+<div class="container header-container">
+    <div class="logo"><img src="logo.svg" alt="Smart City logo"><span>Smart<span>City</span></span></div>
+    <nav>
+        <ul>
+            <li><a href="home.html">Home</a></li>
+            <li><a href="services.html">Services</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="connect.html" class="active">Connect</a></li>
+        </ul>
+    </nav>
+    <div class="auth">
+        <button class="btn btn-outline" onclick="location.href='userlogin.html'">Login</button>
+        <button class="btn btn-primary" onclick="location.href='usersignup.html'">Signup</button>
+    </div>
+</div>
+</header>
+<main class="container main">
+    <div class="section-title">
+        <h2>Connect with Government Services</h2>
+        <p>Submit your civic request directly from the Smart City portal and track its status.</p>
+    </div>
+    <div class="grid">
+        <div class="card">
+            <div id="statusMessage" class="notification"></div>
+            <h3>Send a Civic Request</h3>
+            <form id="civicForm">
+                <label for="department">Department</label>
+                <select id="department" required>
+                    <option value="Public Works">Public Works</option>
+                    <option value="Traffic & Transport">Traffic & Transport</option>
+                    <option value="Health">Health</option>
+                    <option value="Environment">Environment</option>
+                    <option value="Utilities">Utilities</option>
+                    <option value="Other">Other</option>
+                </select>
+                <label for="subject">Subject</label>
+                <input id="subject" type="text" placeholder="Enter a clear request title" required>
+                <label for="message">Message</label>
+                <textarea id="message" placeholder="Describe the issue or suggestion in detail" required></textarea>
+                <button type="submit" class="btn btn-primary">Submit Request</button>
+            </form>
+        </div>
+    </div>
+    <section class="how-it-works">
+        <h2>How It Works</h2>
+        <p class="subtitle">Submit your issue in 3 simple steps</p>
+        <div class="steps">
+            <div class="step">
+                <div class="icon">📝</div>
+                <h3>1. Submit Request</h3>
+                <p>Fill out the civic request form with department, subject, and message.</p>
+            </div>
+            <div class="step">
+                <div class="icon">🏢</div>
+                <h3>2. Assigned to Department</h3>
+                <p>Your request is sent to the respective government department for action.</p>
+            </div>
+            <div class="step">
+                <div class="icon">✅</div>
+                <h3>3. Track & Resolve</h3>
+                <p>Track the status of your request and get updates until it is resolved.</p>
+            </div>
+        </div>
+    </section>
+    <div class="grid">
+        <div class="card">
+            <h3>Your Government Requests</h3>
+            <div id="requestList" class="list">
+                <p style="color:#64748b;">Load your requests after you sign in.</p>
+            </div>
+        </div>
+    </div>
+</main>
+<footer>
+    <p>© 2026 Smart City Project | Developed by Komal and Mansi</p>
+</footer>
+<script>
+const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+const statusMessage = document.getElementById('statusMessage');
+const requestList = document.getElementById('requestList');
+const civicForm = document.getElementById('civicForm');
+
+function showStatus(message, success = true) {
+    statusMessage.style.display = 'block';
+    statusMessage.style.background = success ? '#e6fffa' : '#ffe3e3';
+    statusMessage.style.color = success ? '#0f5132' : '#7f1d1d';
+    statusMessage.textContent = message;
+    setTimeout(() => { statusMessage.style.display = 'none'; }, 4500);
+}
+
+async function fetchRequests() {
+    if (!token) {
+        requestList.innerHTML = '<p style="color:#64748b;">Please login to view and submit civic requests.</p>';
+        return;
+    }
+    try {
+        const res = await fetch('/api/civic/my', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error('Unable to load requests');
+        const data = await res.json();
+        if (!Array.isArray(data.requests) || data.requests.length === 0) {
+            requestList.innerHTML = '<p style="color:#64748b;">No requests found yet. Submit your first request.</p>';
+            return;
+        }
+        requestList.innerHTML = data.requests.map(req => `
+            <div class="request-item">
+                <h4>${req.subject}</h4>
+                <p>${req.message}</p>
+                <div class="meta">
+                    <span>Department: ${req.department}</span>
+                    <span>Status: ${req.status}</span>
+                    <span>Submitted: ${new Date(req.createdAt).toLocaleString()}</span>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        requestList.innerHTML = '<p style="color:#64748b;">Could not load requests. Please refresh.</p>';
+    }
+}
+
+civicForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!token) {
+        showStatus('Please login to submit a government request.', false);
+        return;
+    }
+    const department = document.getElementById('department').value;
+    const subject = document.getElementById('subject').value.trim();
+    const message = document.getElementById('message').value.trim();
+    if (!subject || !message) {
+        showStatus('Subject and message are required.', false);
+        return;
+    }
+    try {
+        const res = await fetch('/api/civic/request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ department, subject, message }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Submission failed');
+        showStatus('Your government request has been submitted successfully.');
+        civicForm.reset();
+        fetchRequests();
+    } catch (error) {
+        showStatus(error.message || 'Unable to submit request.', false);
+    }
+});
+
+fetchRequests();
+</script>
+</body>
+</html>

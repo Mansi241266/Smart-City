@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart City - Admin Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI",sans-serif;}
+body{min-height:100vh;background:#f4f6f9;color:#2c3e50;}
+header{display:flex;justify-content:space-between;align-items:center;padding:24px 32px;background:#2c3e50;color:white;}
+header h1{font-size:24px;}
+button.logout{background:#e74c3c;color:white;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;}
+.main{padding:24px 32px;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:24px;}
+.dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;}
+.weather-card{background:white;padding:20px;border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.08);}
+.assistant-box{background:white;padding:20px;border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.08);}
+.assistant-log{max-height:260px;overflow-y:auto;padding:12px;border:1px solid #ecf0f1;border-radius:12px;margin-bottom:12px;background:#fafbfc;}
+.assistant-message{margin-bottom:10px;padding:10px;border-radius:12px;}
+.assistant-message.user{background:#dceef9;color:#1f4f7d;}
+.assistant-message.bot{background:#eef7ff;color:#1c3d5a;}
+.assistant-input-row{display:flex;gap:10px;}
+.assistant-input-row input{flex:1;}
+.assistant-input-row button{padding:10px 16px;border:none;border-radius:10px;background:#2c80cc;color:white;cursor:pointer;}
+.card{background:white;padding:20px;border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.08);}
+.card button, .weather-card button { border:none; background:#2c80cc; color:white; border-radius:10px; padding:10px 14px; cursor:pointer; transition:.2s; }
+.card button:hover, .weather-card button:hover { opacity:.95; }
+.sensor-list{list-style:none;padding:0;margin:0;}
+.sensor-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;margin-bottom:12px;border-radius:12px;background:#f7f9fc;}
+.sensor-item strong{color:#2c3e50;}
+.sensor-status{font-size:13px;color:#7f8c8d;}
+.card strong{display:block;margin-bottom:10px;font-size:13px;color:#7f8c8d;}
+.card span{font-size:28px;font-weight:700;}
+.tab-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.tab{background:#ecf0f1;color:#2c3e50;padding:12px 18px;border:none;border-radius:999px;cursor:pointer;transition:.2s;}
+.tab.active{background:#2c80cc;color:white;}
+.section{margin-bottom:24px;}
+.content-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start;}
+.detail-card{background:white;border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.08);padding:20px;min-height:420px;}
+.detail-card h3{margin-bottom:16px;}
+.detail-row{margin-bottom:12px;}
+.detail-row strong{display:block;color:#7f8c8d;margin-bottom:6px;}
+.detail-row p{margin:0;color:#2c3e50;}
+.table-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:16px 20px;border-bottom:1px solid #ecf0f1;}
+.table-toolbar label{display:flex;align-items:center;gap:8px;color:#34495e;font-size:14px;}
+.table-toolbar input, .table-toolbar select, .detail-card select, .detail-card textarea, .detail-card input{border:1px solid #dfe6ef;border-radius:10px;padding:10px;outline:none;font-size:14px;width:100%;}
+.detail-card textarea{min-height:100px;resize:vertical;}
+    #adminAqiChart{max-width:720px;max-height:360px;height:360px;margin:0 auto;display:block;}
+.action-group{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px;}
+.action-group button{flex:1;min-width:140px;}
+.status-badge{font-size:12px;}
+@media(max-width:1100px){.content-grid{grid-template-columns:1fr;}}
+@media(max-width:700px){.table-toolbar{flex-direction:column;align-items:stretch;} }
+.table-wrap{background:white;border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.08);overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:14px 16px;text-align:left;border-bottom:1px solid #ecf0f1;}
+th{color:#7f8c8d;font-size:13px;text-transform:uppercase;letter-spacing:.04em;}
+.status{padding:6px 10px;border-radius:999px;color:white;font-size:12px;font-weight:700;display:inline-block;}
+.status.pending{background:#f39c12;}
+.status.resolved{background:#27ae60;}
+.status.in, .status.in-progress{background:#2980b9;}
+.status.open{background:#8e44ad;}
+.no-data{padding:30px;text-align:center;color:#7f8c8d;}
+table tr:hover{background:#f5fbff;}
+tr.selected{background:#d6eefc;}
+.tab:hover{background:#dceef9;}
+@media(max-width:900px){.stats{grid-template-columns:1fr 1fr;}}
+@media(max-width:640px){header{flex-direction:column;align-items:flex-start;gap:12px;} .stats{grid-template-columns:1fr;} th,td{padding:12px;}}
+</style>
+<link rel="stylesheet" href="theme.css">
+<script defer src="theme.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-sA+e2Eo0dI4g5vy5u9SaG6OR/84W4S6SFAeNL0PpY0M=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9N1j6Vwfn0Lbb2ukV+YuAVighT2lifrDQM3hQTdGcA=" crossorigin=""></script>
+</head>
+<body>
+<header>
+    <div>
+        <h1>Admin Dashboard</h1>
+        <p id="adminEmail"></p>
+    </div>
+    <button class="logout" onclick="logout()">Logout</button>
+</header>
+<div class="main">
+    <div class="stats">
+        <div class="card"><strong>Total Complaints</strong><span id="totalComplaints">0</span></div>
+        <div class="card"><strong>Resolved</strong><span id="resolvedComplaints">0</span></div>
+        <div class="card"><strong>Pending</strong><span id="pendingComplaints">0</span></div>
+        <div class="card"><strong>Total Users</strong><span id="totalUsers">0</span></div>
+        <div class="card"><strong>Average AQI</strong><span id="averageAqi">0</span></div>
+        <div class="card"><strong>Max AQI</strong><span id="maxAqi">0</span></div>
+        <div class="card"><strong>Min AQI</strong><span id="minAqi">0</span></div>
+        <div class="card"><strong>Worst AQI Location</strong><span id="worstAqiLocation">N/A</span></div>
+        <div class="card"><strong>Total Traffic Reports</strong><span id="totalTrafficReports">0</span></div>
+        <div class="card"><strong>Pending Traffic</strong><span id="pendingTrafficReports">0</span></div>
+    </div>
+
+    <div class="section">
+        <div class="dashboard-grid">
+            <div class="weather-card">
+                <h3>☀️ Weather Snapshot</h3>
+                <p id="adminWeatherCondition">Condition: -</p>
+                <p id="adminWeatherTemp">Temperature: -</p>
+                <p id="adminWeatherHumidity">Humidity: -</p>
+                <p id="adminWeatherWind">Wind: -</p>
+                <p id="adminWeatherAlert">Alert: -</p>
+                <button type="button" onclick="loadAdminWeather()">Refresh Weather</button>
+            </div>
+            <div class="weather-card">
+                <h3>🌫️ AQI Snapshot</h3>
+                <p id="adminAqiCategory">Category: -</p>
+                <p id="adminAqiValue">AQI Value: -</p>
+                <p id="adminAqiSuggestion">Suggestion: -</p>
+                <p id="adminAqiLocation">Location: -</p>
+                <button type="button" onclick="loadAdminAqiSnapshot()">Refresh AQI</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>🧠 Admin Assistant</h3>
+        <div class="assistant-box">
+            <div id="adminAssistantLog" class="assistant-log"></div>
+            <div class="assistant-input-row">
+                <input id="adminAssistantInput" placeholder="Ask me about admin tasks or system issues" />
+                <button type="button" onclick="sendAdminAssistantMessage()">Ask</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>🔥 Trending Complaints</h3>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Votes</th>
+                        <th>Status</th>
+                        <th>User</th>
+                    </tr>
+                </thead>
+                <tbody id="trendingBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>📣 Live Notifications</h3>
+                <div id="adminNotificationLog" class="assistant-log"></div>
+            </div>
+            <div class="card">
+                <h3>🚨 Emergency Alerts</h3>
+                <div id="adminEmergencyList" class="assistant-log"></div>
+                <button type="button" onclick="loadEmergencyAlerts()">Refresh SOS Alerts</button>
+            </div>
+            <div class="card">
+                <h3>🛰️ IoT Sensor Feed</h3>
+                <ul id="sensorList" class="sensor-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-bar">
+        <button id="complaintsTab" class="tab active">Complaints</button>
+        <button id="usersTab" class="tab">Users</button>
+        <button id="trafficTab" class="tab">Traffic</button>
+        <button id="pollutionTab" class="tab">Pollution</button>
+    </div>
+
+    <div id="complaintsSection" class="section">
+        <div class="content-grid">
+            <div class="table-wrap">
+                <div class="table-toolbar">
+                    <label>Filter:
+                        <select id="statusFilter">
+                            <option value="">All statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Resolved">Resolved</option>
+                            <option value="Open">Open</option>
+                        </select>
+                    </label>
+                    <label>Search:
+                        <input id="searchInput" type="search" placeholder="Search by user, title or category">
+                    </label>
+                    <button type="button" onclick="loadAdminComplaints()">Refresh</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>User</th>
+                            <th>Category</th>
+                            <th>Votes</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="complaintBody"></tbody>
+                </table>
+            </div>
+
+            <aside class="detail-card" id="complaintDetail">
+                <h3>Complaint details</h3>
+                <p class="no-data">Select a complaint to review, update status, or contact the user.</p>
+            </aside>
+        </div>
+    </div>
+
+    <div id="usersSection" class="section" style="display:none;">
+        <div class="table-wrap">
+            <div class="table-toolbar">
+                <label>Search users:
+                    <input id="userSearch" type="search" placeholder="Search name or email">
+                </label>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                <tbody id="userBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="trafficSection" class="section" style="display:none;">
+        <div class="content-grid">
+            <div class="table-wrap">
+                <div class="table-toolbar">
+                    <label>Filter:
+                        <select id="trafficStatusFilter">
+                            <option value="">All statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Resolved">Resolved</option>
+                        </select>
+                    </label>
+                    <label>Search:
+                        <input id="trafficSearch" type="search" placeholder="Search by user, issue or location">
+                    </label>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Issue</th>
+                            <th>User</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trafficBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="section">
+            <h3>Traffic Heatmap</h3>
+            <div id="adminTrafficMap" style="height:340px;border-radius:16px;overflow:hidden;"></div>
+        </div>
+    </div>
+    <div id="pollutionSection" class="section" style="display:none;">
+        <div class="section">
+            <h3>Air Quality Distribution</h3>
+            <canvas id="adminAqiChart"></canvas>
+        </div>
+    </div>
+</div>
+</div>
+<script>
+const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+const user = JSON.parse(localStorage.getItem('user'));
+const adminEmail = document.getElementById('adminEmail');
+const totalComplaints = document.getElementById('totalComplaints');
+const resolvedComplaints = document.getElementById('resolvedComplaints');
+const pendingComplaints = document.getElementById('pendingComplaints');
+const totalUsers = document.getElementById('totalUsers');
+const averageAqi = document.getElementById('averageAqi');
+const maxAqi = document.getElementById('maxAqi');
+const totalTrafficReports = document.getElementById('totalTrafficReports');
+const pendingTrafficReports = document.getElementById('pendingTrafficReports');
+const minAqi = document.getElementById('minAqi');
+const worstAqiLocation = document.getElementById('worstAqiLocation');
+const complaintBody = document.getElementById('complaintBody');
+const complaintDetail = document.getElementById('complaintDetail');
+const usersSection = document.getElementById('usersSection');
+const complaintsSection = document.getElementById('complaintsSection');
+const trafficSection = document.getElementById('trafficSection');
+const pollutionSection = document.getElementById('pollutionSection');
+const complaintsTab = document.getElementById('complaintsTab');
+const usersTab = document.getElementById('usersTab');
+const trafficTab = document.getElementById('trafficTab');
+const pollutionTab = document.getElementById('pollutionTab');
+const statusFilter = document.getElementById('statusFilter');
+const searchInput = document.getElementById('searchInput');
+const trafficStatusFilter = document.getElementById('trafficStatusFilter');
+const trafficSearch = document.getElementById('trafficSearch');
+const userSearch = document.getElementById('userSearch');
+const userBody = document.getElementById('userBody');
+const trafficBody = document.getElementById('trafficBody');
+const adminAssistantLog = document.getElementById('adminAssistantLog');
+const adminAssistantInput = document.getElementById('adminAssistantInput');
+const adminNotificationLog = document.getElementById('adminNotificationLog');
+const adminEmergencyList = document.getElementById('adminEmergencyList');
+const sensorList = document.getElementById('sensorList');
+const trendingBody = document.getElementById('trendingBody');
+
+let complaintData = [];
+let userData = [];
+let trafficData = [];
+let selectedComplaint = null;
+let selectedTraffic = null;
+let trafficMap = null;
+let trafficMarkers = null;
+let adminAqiChart = null;
+let socket = null;
+
+if (!token || !user || user.role !== 'admin') {
+    window.location.href = 'admin-login.html';
+}
+adminEmail.textContent = `Signed in as ${user.email || user.mobile}`;
+
+function buildHeaders(additional = {}) {
+    return {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        ...additional,
+    };
+}
+
+async function apiRequest(url, options = {}) {
+    const res = await fetch(url, {
+        ...options,
+        headers: buildHeaders(options.headers || {}),
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || err.message || 'Request failed');
+    }
+    return res.json();
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleString();
+}
+
+function addAdminAssistantMessage(role, message) {
+    if (!adminAssistantLog) return;
+    const item = document.createElement('div');
+    item.className = `assistant-message ${role}`;
+    item.innerText = `${role === 'user' ? 'You:' : 'Assistant:'} ${message}`;
+    adminAssistantLog.appendChild(item);
+    adminAssistantLog.scrollTop = adminAssistantLog.scrollHeight;
+}
+
+function addAdminNotification(message) {
+    if (!adminNotificationLog) return;
+    const item = document.createElement('div');
+    item.className = 'assistant-message bot';
+    item.innerText = message;
+    adminNotificationLog.appendChild(item);
+    adminNotificationLog.scrollTop = adminNotificationLog.scrollHeight;
+}
+
+function initSocket() {
+    if (typeof io === 'undefined') {
+        addAdminNotification('Live socket updates are unavailable.');
+        return;
+    }
+    socket = io();
+    socket.on('connect', () => addAdminNotification(`Connected to live updates (${socket.id})`));
+    socket.on('notification', payload => {
+        if (!payload) return;
+        const title = payload.title || 'Notification';
+        const message = payload.message || 'New update received.';
+        addAdminNotification(`🔔 ${title} — ${message}`);
+    });
+    socket.on('disconnect', () => addAdminNotification('Disconnected from live update stream.'));
+    socket.on('connect_error', () => addAdminNotification('Unable to connect to live updates.'));
+}
+
+async function loadEmergencyAlerts() {
+    if (!adminEmergencyList) return;
+    try {
+        const data = await apiRequest('/api/emergency/all');
+        renderEmergencyAlerts(data.alerts || []);
+        loadSensorFeed();
+    } catch (error) {
+        console.error('Emergency alerts load error:', error);
+        adminEmergencyList.innerHTML = '<div class="no-data">Unable to load emergency alerts.</div>';
+    }
+}
+
+function renderEmergencyAlerts(alerts) {
+    if (!adminEmergencyList) return;
+    if (!Array.isArray(alerts) || alerts.length === 0) {
+        adminEmergencyList.innerHTML = '<div class="no-data">No SOS alerts available.</div>';
+        return;
+    }
+    adminEmergencyList.innerHTML = alerts.slice(0, 8).map(alert => {
+        const user = alert.userId ? `${alert.userId.name || '-'} (${alert.userId.email || alert.userId.mobile || '-'})` : 'Unknown';
+        const time = formatDate(alert.createdAt);
+        const status = alert.status || 'Sent';
+        return `
+            <div class="assistant-message bot">
+                <strong>${alert.message}</strong>
+                <div class="detail-row"><strong>User</strong><p>${user}</p></div>
+                <div class="detail-row"><strong>Location</strong><p>${alert.location || 'No location'}</p></div>
+                <div class="detail-row"><strong>Status</strong><p>${status}</p></div>
+                <div class="detail-row"><strong>Reported</strong><p>${time}</p></div>
+            </div>`;
+    }).join('');
+}
+
+function loadSensorFeed() {
+    const sensors = [
+        { label: 'Traffic Flow', value: `${trafficData.length || 0} active reports`, status: trafficData.length > 15 ? 'Congested' : 'Clear' },
+        { label: 'AQI Sensor', value: `${averageAqi.textContent || 0} AQI`, status: Number(averageAqi.textContent) > 150 ? 'High' : 'Normal' },
+        { label: 'Emergency Alerts', value: `${adminEmergencyList?.children.length || 0} active`, status: adminEmergencyList?.children.length > 0 ? 'Review' : 'Clear' },
+        { label: 'Power Grid', value: 'Stable', status: 'Nominal' },
+        { label: 'Water Quality', value: 'Good', status: 'Optimal' }
+    ];
+    renderSensorFeed(sensors);
+}
+
+function renderSensorFeed(items) {
+    if (!sensorList) return;
+    sensorList.innerHTML = items.map(item => `
+        <li class="sensor-item">
+            <strong>${item.label}</strong>
+            <span class="sensor-status">${item.value} · ${item.status}</span>
+        </li>
+    `).join('');
+}
+
+function getAdminAssistantResponse(query) {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) {
+        return 'Ask me about managing complaints, traffic reports, AQI insights, or how to work with the admin dashboard.';
+    }
+    if (normalized.includes('complaint') || normalized.includes('status') || normalized.includes('resolve')) {
+        return 'Use the complaints tab to review reported issues, update statuses, and notify users. High-vote complaints should be prioritized for faster resolution.';
+    }
+    if (normalized.includes('traffic') || normalized.includes('accident') || normalized.includes('signal')) {
+        return 'The traffic tab allows you to manage reports, update incident statuses, and view a heatmap of traffic events. Use it to monitor congestion and accidents.';
+    }
+    if (normalized.includes('aqi') || normalized.includes('pollution') || normalized.includes('health')) {
+        return 'The pollution analytics tab displays AQI trends, average values, and worst locations. Use it to identify health-risk areas and prioritize responses.';
+    }
+    if (normalized.includes('user') || normalized.includes('account') || normalized.includes('signup')) {
+        return 'The users tab lists registered users. You can review user details and verify accounts when needed. Encourage active citizens to report issues.';
+    }
+    if (normalized.includes('emergency') || normalized.includes('sos')) {
+        return 'Emergency alerts are sent by users through the SOS button. Monitor incoming alerts and follow up immediately with the relevant authorities.';
+    }
+    if (normalized.includes('analysis') || normalized.includes('problem') || normalized.includes('issue')) {
+        return 'If you face a problem, describe it clearly and I can suggest whether it is a reporting issue, a map display problem, or a notification setup issue.';
+    }
+    return 'I can help with admin workflows, complaint triage, traffic monitoring, AQI stats, emergency alerts, and user management. Ask a specific admin question.';
+}
+
+function sendAdminAssistantMessage() {
+    if (!adminAssistantInput) return;
+    const message = adminAssistantInput.value.trim();
+    if (!message) {
+        alert('Please type a question for the admin assistant.');
+        return;
+    }
+    addAdminAssistantMessage('user', message);
+    addAdminAssistantMessage('bot', getAdminAssistantResponse(message));
+    adminAssistantInput.value = '';
+}
+
+function initTrafficMap() {
+    if (trafficMap) return;
+    if (typeof L === 'undefined') {
+        console.warn('Leaflet is not loaded. Admin traffic map will be unavailable.');
+        return;
+    }
+    trafficMap = L.map('adminTrafficMap').setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(trafficMap);
+    trafficMarkers = L.layerGroup().addTo(trafficMap);
+    setTimeout(() => trafficMap.invalidateSize(), 300);
+}
+
+function renderTrafficHeatmap(reports) {
+    if (typeof L === 'undefined') {
+        return;
+    }
+    if (!trafficMap) initTrafficMap();
+    trafficMarkers.clearLayers();
+    const positions = [];
+    reports.forEach(report => {
+        if (report.lat && report.lng) {
+            const color = report.issueType === 'Accident' || report.issueType === 'Road Block' || report.issueType === 'Signal Issue' ? 'red' : 'orange';
+            const marker = L.circleMarker([report.lat, report.lng], {
+                radius: 8,
+                color,
+                fillColor: color,
+                fillOpacity: 0.7,
+                weight: 1,
+            }).bindPopup(`<strong>${report.issueType}</strong><br>${report.location || 'Unknown location'}<br>Status: ${report.status}`);
+            trafficMarkers.addLayer(marker);
+            positions.push([report.lat, report.lng]);
+        }
+    });
+    if (positions.length) {
+        trafficMap.fitBounds(positions, { padding: [50, 50] });
+    }
+    setTimeout(() => trafficMap.invalidateSize(), 300);
+}
+
+function highlightSelectedRow(id) {
+    Array.from(complaintBody.querySelectorAll('tr')).forEach(row => {
+        row.classList.toggle('selected', row.dataset.id === id);
+    });
+}
+
+function renderComplaintDetail(complaint) {
+    if (!complaint) {
+        complaintDetail.innerHTML = '<h3>Complaint details</h3><p class="no-data">Select a complaint to review, update status, or contact the user.</p>';
+        return;
+    }
+
+    const userInfo = complaint.userId
+        ? `${complaint.userId.name} (${complaint.userId.email || complaint.userId.mobile || '-'})`
+        : 'Unknown';
+
+    complaintDetail.innerHTML = `
+        <h3>${complaint.title || 'Untitled complaint'}</h3>
+        <div class="detail-row"><strong>User</strong><p>${userInfo}</p></div>
+        <div class="detail-row"><strong>Category</strong><p>${complaint.category || '-'}</p></div>
+        <div class="detail-row"><strong>Priority</strong><p>${complaint.priority || '-'}</p></div>
+        <div class="detail-row"><strong>Status</strong><p>${complaint.status || 'Pending'}</p></div>
+        <div class="detail-row"><strong>Location</strong><p>${complaint.location || '-'}</p></div>
+        <div class="detail-row"><strong>Created</strong><p>${formatDate(complaint.createdAt)}</p></div>
+        <div class="detail-row"><strong>Description</strong><p>${complaint.description || '-'}</p></div>
+        ${complaint.image ? `<div class="detail-row"><strong>Image</strong><p><a href="/uploads/${complaint.image}" target="_blank" rel="noopener noreferrer"><img src="/uploads/${complaint.image}" alt="Complaint Image" style="max-width:100%;border-radius:12px;cursor:pointer;" title="Click to view full image"/></a></p></div>` : ''}
+        <div class="detail-row"><strong>Update status</strong><select id="statusSelect">
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+            <option value="Open">Open</option>
+        </select></div>
+        <div class="detail-row"><strong>Notify user</strong><textarea id="messageContent" placeholder="Write a message to the user"></textarea></div>
+        <div class="action-group">
+            <button onclick="changeComplaintStatus()">Save status</button>
+            <button onclick="sendNotification('email')">Email user</button>
+            <button onclick="sendNotification('sms')">SMS user</button>
+            <button onclick="sendNotification('both')">Email + SMS</button>
+            <button onclick="deleteSelectedComplaint()" style="background:#e74c3c;">Delete complaint</button>
+        </div>
+    `;
+
+    const statusSelect = document.getElementById('statusSelect');
+    statusSelect.value = complaint.status || 'Pending';
+}
+
+async function loadAdminStats() {
+    try {
+        const data = await apiRequest('/api/admin/stats');
+        totalComplaints.textContent = data.total || 0;
+        resolvedComplaints.textContent = data.resolved || 0;
+        pendingComplaints.textContent = data.pending || 0;
+        totalUsers.textContent = data.users || 0;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function loadAdminAqiStats() {
+    try {
+        const data = await apiRequest('/api/aqi/admin/stats');
+        averageAqi.textContent = data.averageAqi || 0;
+        maxAqi.textContent = data.maxAqi || 0;
+        minAqi.textContent = data.minAqi ?? 0;
+        worstAqiLocation.textContent = data.worstLocation || 'N/A';
+        if (Array.isArray(data.categoryCounts)) {
+            renderAdminAqiChart(data.categoryCounts);
+        }
+    } catch (error) {
+        console.error('AQI admin stats error:', error);
+    }
+}
+
+function renderAdminAqiChart(categoryCounts) {
+    const ctx = document.getElementById('adminAqiChart');
+    if (!ctx) return;
+    const labels = categoryCounts.map(item => item._id || 'Unknown');
+    const values = categoryCounts.map(item => item.count || 0);
+    const colors = labels.map(label => {
+        if (label === 'Good') return '#27ae60';
+        if (label === 'Moderate') return '#f1c40f';
+        if (label === 'Poor') return '#e67e22';
+        if (label === 'Very Poor') return '#e74c3c';
+        if (label === 'Hazardous') return '#2d3436';
+        return '#3498db';
+    });
+
+    if (adminAqiChart) {
+        adminAqiChart.destroy();
+    }
+
+    adminAqiChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels,
+            datasets: [{ data: values, backgroundColor: colors }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+}
+
+async function loadAdminWeather() {
+    if (!navigator.geolocation) {
+        updateAdminWeatherDisplay({ condition: 'Geolocation unavailable', temp: '-', humidity: '-', wind: '-', alert: 'Enable location services' });
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(async position => {
+        try {
+            const { latitude, longitude } = position.coords;
+            const response = await apiRequest(`/api/weather?lat=${latitude}&lon=${longitude}`);
+            updateAdminWeatherDisplay({
+                condition: response.condition || 'Unknown',
+                temp: response.temperature ? `${response.temperature} °C` : '-',
+                humidity: response.humidity ? `${response.humidity}%` : '-',
+                wind: response.windSpeed ? `${response.windSpeed} m/s` : '-',
+                alert: response.alert || 'No alerts',
+            });
+        } catch (error) {
+            updateAdminWeatherDisplay({ condition: 'Unable to load', temp: '-', humidity: '-', wind: '-', alert: 'Check network or API' });
+            console.error('Admin weather error:', error);
+        }
+    }, error => {
+        updateAdminWeatherDisplay({ condition: 'Location denied', temp: '-', humidity: '-', wind: '-', alert: 'Allow location access' });
+    });
+}
+
+function updateAdminWeatherDisplay({ condition, temp, humidity, wind, alert }) {
+    document.getElementById('adminWeatherCondition').textContent = `Condition: ${condition}`;
+    document.getElementById('adminWeatherTemp').textContent = `Temperature: ${temp}`;
+    document.getElementById('adminWeatherHumidity').textContent = `Humidity: ${humidity}`;
+    document.getElementById('adminWeatherWind').textContent = `Wind: ${wind}`;
+    document.getElementById('adminWeatherAlert').textContent = `Alert: ${alert}`;
+}
+
+async function loadAdminAqiSnapshot() {
+    if (!navigator.geolocation) {
+        updateAdminAqiDisplay({ category: '-', value: '-', suggestion: 'Location unavailable', location: 'Unknown' });
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(async position => {
+        try {
+            const { latitude, longitude } = position.coords;
+            const response = await apiRequest(`/api/aqi?lat=${latitude}&lon=${longitude}`);
+            const category = response.category || 'Unknown';
+            const suggestion = category === 'Good' ? 'Air quality is healthy.' : category === 'Moderate' ? 'Take light precautions.' : 'Limit outdoor activity.';
+            updateAdminAqiDisplay({
+                category,
+                value: response.aqi || 'N/A',
+                suggestion,
+                location: response.location || 'Current location',
+            });
+        } catch (error) {
+            updateAdminAqiDisplay({ category: 'Unable to load', value: '-', suggestion: 'Check network or API', location: 'Unknown' });
+            console.error('Admin AQI snapshot error:', error);
+        }
+    }, error => {
+        updateAdminAqiDisplay({ category: 'Location denied', value: '-', suggestion: 'Allow location access', location: 'Unknown' });
+    });
+}
+
+function updateAdminAqiDisplay({ category, value, suggestion, location }) {
+    document.getElementById('adminAqiCategory').textContent = `Category: ${category}`;
+    document.getElementById('adminAqiValue').textContent = `AQI Value: ${value}`;
+    document.getElementById('adminAqiSuggestion').textContent = `Suggestion: ${suggestion}`;
+    document.getElementById('adminAqiLocation').textContent = `Location: ${location}`;
+}
+
+async function loadAdminTrendingComplaints() {
+    if (!trendingBody) return;
+    try {
+        const { complaints } = await apiRequest('/api/complaint/trending');
+        if (!Array.isArray(complaints) || complaints.length === 0) {
+            trendingBody.innerHTML = '<tr><td colspan="4" class="no-data">No trending complaints at the moment.</td></tr>';
+            return;
+        }
+        trendingBody.innerHTML = complaints.map(item => {
+            const userInfo = item.userId ? `${item.userId.name || '-'} (${item.userId.email || item.userId.mobile || '-'})` : '-';
+            const votes = item.votes || 0;
+            return `
+                <tr>
+                    <td>${item.title || '-'}</td>
+                    <td>${votes}</td>
+                    <td><span class="status ${item.status ? item.status.toLowerCase().replace(/\s+/g, '-') : 'pending'}">${item.status || 'Pending'}</span></td>
+                    <td>${userInfo}</td>
+                </tr>`;
+        }).join('');
+    } catch (error) {
+        console.error('Trending complaints error:', error);
+        trendingBody.innerHTML = '<tr><td colspan="4" class="no-data">Unable to load trending complaints.</td></tr>';
+    }
+}
+
+function applyComplaintFilters() {
+    const statusValue = statusFilter.value;
+    const searchValue = searchInput.value.trim().toLowerCase();
+
+    const filtered = complaintData.filter(item => {
+        const matchesStatus = !statusValue || item.status === statusValue;
+        const userText = item.userId ? `${item.userId.name} ${item.userId.email || ''} ${item.userId.mobile || ''}`.toLowerCase() : '';
+        const searchable = `${item.title || ''} ${item.category || ''} ${userText}`.toLowerCase();
+        const matchesSearch = !searchValue || searchable.includes(searchValue);
+        return matchesStatus && matchesSearch;
+    });
+
+    renderComplaintRows(filtered);
+}
+
+function renderComplaintRows(list) {
+    if (!Array.isArray(list) || list.length === 0) {
+        complaintBody.innerHTML = '<tr><td colspan="6" class="no-data">No complaints found.</td></tr>';
+        return;
+    }
+
+    complaintBody.innerHTML = list.map(item => {
+        const statusClass = item.status ? item.status.toLowerCase().replace(/\s+/g, '-') : 'pending';
+        const userInfo = item.userId ? `${item.userId.name} (${item.userId.email || item.userId.mobile || '-'})` : '-';
+        return `
+            <tr data-id="${item._id}" onclick="selectComplaint('${item._id}')">
+                <td>${item.title || '-'}</td>
+                <td>${userInfo}</td>
+                <td>${item.category || '-'}</td>
+                <td>${item.votes || 0}</td>
+                <td><span class="status ${statusClass}">${item.status || 'Pending'}</span></td>
+                <td>${formatDate(item.createdAt)}</td>
+            </tr>`;
+    }).join('');
+}
+
+function renderTrafficRows(list) {
+    if (!Array.isArray(list) || list.length === 0) {
+        trafficBody.innerHTML = '<tr><td colspan="6" class="no-data">No traffic reports found.</td></tr>';
+        return;
+    }
+
+    trafficBody.innerHTML = list.map(item => {
+        const statusClass = item.status ? item.status.toLowerCase().replace(/\s+/g, '-') : 'pending';
+        const userInfo = item.user ? `${item.user.name} (${item.user.email || item.user.mobile || '-'})` : '-';
+        return `
+            <tr>
+                <td>${item.issueType || '-'}</td>
+                <td>${userInfo}</td>
+                <td>${item.location || '-'}</td>
+                <td><span class="status ${statusClass}">${item.status || 'Pending'}</span></td>
+                <td>${formatDate(item.createdAt)}</td>
+                <td>
+                    <select onchange="updateTrafficStatus('${item._id}', this.value)">
+                        <option value="Pending" ${item.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                        <option value="In Progress" ${item.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                        <option value="Resolved" ${item.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
+                    </select>
+                </td>
+            </tr>`;
+    }).join('');
+}
+
+async function loadAdminTraffic() {
+    try {
+        const { traffic } = await apiRequest('/api/traffic/all');
+        trafficData = traffic || [];
+        renderTrafficRows(trafficData);
+        renderTrafficHeatmap(trafficData);
+    } catch (error) {
+        console.error(error);
+        trafficBody.innerHTML = '<tr><td colspan="6" class="no-data">Unable to load traffic reports.</td></tr>';
+    }
+}
+
+async function updateTrafficStatus(id, status) {
+    try {
+        await apiRequest(`/api/traffic/update/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ status }),
+        });
+        await loadAdminTraffic();
+        await loadAdminTrafficStats();
+    } catch (error) {
+        console.error(error);
+        alert(error.message || 'Unable to update traffic status.');
+    }
+}
+async function deleteSelectedComplaint() {
+    if (!selectedComplaint) {
+        alert('No complaint selected to delete.');
+        return;
+    }
+
+    if (!confirm('Are you sure you want to delete this complaint? This action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        await apiRequest(`/api/complaint/delete/${selectedComplaint._id}`, {
+            method: 'DELETE'
+        });
+        alert('Complaint deleted successfully.');
+        selectedComplaint = null;
+        complaintDetail.innerHTML = '<h3>Complaint details</h3><p class="no-data">Select a complaint to review, update status, or contact the user.</p>';
+        await loadAdminStats();
+        await loadAdminComplaints();
+    } catch (error) {
+        console.error('Delete complaint error:', error);
+        alert(error.message || 'Unable to delete complaint.');
+    }
+}
+async function loadAdminTrafficStats() {
+    try {
+        const data = await apiRequest('/api/traffic/admin/stats');
+        totalTrafficReports.textContent = data.total || 0;
+        pendingTrafficReports.textContent = data.pending || 0;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function filterTrafficData() {
+    const statusValue = trafficStatusFilter.value;
+    const searchValue = trafficSearch.value.trim().toLowerCase();
+
+    const filtered = trafficData.filter(item => {
+        const matchesStatus = !statusValue || item.status === statusValue;
+        const userText = item.user ? `${item.user.name} ${item.user.email || ''} ${item.user.mobile || ''}`.toLowerCase() : '';
+        const searchable = `${item.issueType || ''} ${item.location || ''} ${userText}`.toLowerCase();
+        const matchesSearch = !searchValue || searchable.includes(searchValue);
+        return matchesStatus && matchesSearch;
+    });
+
+    renderTrafficRows(filtered);
+}
+
+async function loadAdminComplaints() {
+    try {
+        const { complaints } = await apiRequest('/api/admin/complaints');
+        complaintData = complaints || [];
+        applyComplaintFilters();
+        if (!selectedComplaint && complaintData.length > 0) {
+            selectComplaint(complaintData[0]._id);
+        }
+    } catch (error) {
+        console.error(error);
+        complaintBody.innerHTML = '<tr><td colspan="5" class="no-data">Unable to load complaints.</td></tr>';
+    }
+}
+
+async function loadAdminUsers() {
+    try {
+        const { users } = await apiRequest('/api/admin/users');
+        userData = users || [];
+        renderUserRows(userData);
+    } catch (error) {
+        console.error(error);
+        userBody.innerHTML = '<tr><td colspan="4" class="no-data">Unable to load users.</td></tr>';
+    }
+}
+
+function renderUserRows(list) {
+    if (!Array.isArray(list) || list.length === 0) {
+        userBody.innerHTML = '<tr><td colspan="4" class="no-data">No users found.</td></tr>';
+        return;
+    }
+
+    userBody.innerHTML = list.map(user => `
+        <tr>
+            <td>${user.name || '-'}</td>
+            <td>${user.email || '-'}</td>
+            <td>${user.mobile || '-'}</td>
+            <td>${formatDate(user.createdAt)}</td>
+        </tr>`).join('');
+}
+
+function selectComplaint(id) {
+    selectedComplaint = complaintData.find(item => item._id === id);
+    highlightSelectedRow(id);
+    renderComplaintDetail(selectedComplaint);
+}
+
+async function changeComplaintStatus() {
+    if (!selectedComplaint) return;
+    const status = document.getElementById('statusSelect').value;
+    try {
+        await apiRequest(`/api/admin/complaints/${selectedComplaint._id}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status }),
+        });
+        await loadAdminStats();
+        await loadAdminComplaints();
+    } catch (error) {
+        console.error(error);
+        alert(error.message || 'Unable to update status.');
+    }
+}
+
+async function sendNotification(type) {
+    if (!selectedComplaint) return;
+    const message = document.getElementById('messageContent').value.trim();
+    if (!message) {
+        alert('Add a message before sending.');
+        return;
+    }
+
+    try {
+        const body = {
+            userId: selectedComplaint.userId ? selectedComplaint.userId._id : null,
+            complaintId: selectedComplaint._id,
+            type,
+            subject: `Update on complaint: ${selectedComplaint.title}`,
+            message,
+        };
+        const result = await apiRequest('/api/admin/notify', {
+            method: 'POST',
+            body: JSON.stringify(body),
+        });
+        alert(result.results.join(' '));
+    } catch (error) {
+        console.error(error);
+        alert(error.message || 'Unable to send notification.');
+    }
+}
+
+function setActiveTab(tab) {
+    usersSection.style.display = 'none';
+    complaintsSection.style.display = 'none';
+    trafficSection.style.display = 'none';
+    pollutionSection.style.display = 'none';
+    complaintsTab.classList.remove('active');
+    usersTab.classList.remove('active');
+    trafficTab.classList.remove('active');
+    pollutionTab.classList.remove('active');
+
+    if (tab === 'users') {
+        usersSection.style.display = 'block';
+        usersTab.classList.add('active');
+        loadAdminUsers();
+    } else if (tab === 'traffic') {
+        trafficSection.style.display = 'block';
+        trafficTab.classList.add('active');
+        loadAdminTraffic();
+        loadAdminTrafficStats();
+        setTimeout(() => trafficMap && trafficMap.invalidateSize(), 300);
+    } else if (tab === 'pollution') {
+        pollutionSection.style.display = 'block';
+        pollutionTab.classList.add('active');
+        loadAdminAqiStats();
+    } else {
+        complaintsSection.style.display = 'block';
+        complaintsTab.classList.add('active');
+    }
+}
+
+searchInput.addEventListener('input', applyComplaintFilters);
+statusFilter.addEventListener('change', applyComplaintFilters);
+userSearch.addEventListener('input', () => {
+    const query = userSearch.value.trim().toLowerCase();
+    renderUserRows(userData.filter(u => {
+        return `${u.name || ''} ${u.email || ''}`.toLowerCase().includes(query);
+    }));
+});
+
+trafficStatusFilter.addEventListener('change', filterTrafficData);
+trafficSearch.addEventListener('input', filterTrafficData);
+
+complaintsTab.addEventListener('click', () => setActiveTab('complaints'));
+usersTab.addEventListener('click', () => setActiveTab('users'));
+trafficTab.addEventListener('click', () => setActiveTab('traffic'));
+pollutionTab.addEventListener('click', () => setActiveTab('pollution'));
+
+function logout() {
+    localStorage.clear();
+    window.location.href = 'admin-login.html';
+}
+
+loadAdminStats();
+loadAdminAqiStats();
+loadAdminWeather();
+loadAdminAqiSnapshot();
+loadAdminTrendingComplaints();
+loadAdminTrafficStats();
+loadAdminComplaints();
+initSocket();
+loadEmergencyAlerts();
+loadSensorFeed();
+</script>
+</body>
+</html>

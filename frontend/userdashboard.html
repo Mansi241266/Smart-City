@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart City Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-sA+e2Eo0dI4g5vy5u9SaG6OR/84W4S6SFAeNL0PpY0M=" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9N1j6Vwfn0Lbb2ukV+YuAVighT2lifrDQM3hQTdGcA=" crossorigin=""></script>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI"; }
+
+body { min-height:100vh; display:flex; background:linear-gradient(180deg, #eef2f7 0%, #d9e5ef 100%); color:#24303f; }
+
+/* Sidebar */
+.sidebar {
+    width:260px;
+    min-height:100vh;
+    background:#1d2a41;
+    color:white;
+    padding:28px 20px;
+    position:fixed;
+}
+
+.sidebar h2 { margin-bottom:30px; }
+
+.sidebar a {
+    display:block;
+    padding:12px;
+    color:white;
+    text-decoration:none;
+    border-radius:5px;
+    margin-bottom:10px;
+}
+
+.sidebar a:hover { background:#34495e; }
+
+/* Main */
+.main {
+    margin-left:260px;
+    width:calc(100% - 260px);
+    padding:28px 32px;
+    min-height:100vh;
+    background:transparent;
+}
+
+.page-wrapper {
+    width:100%;
+    max-width:1480px;
+    margin:0 auto;
+}
+
+/* Topbar */
+.topbar {
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:20px;
+}
+
+.logout {
+    background:red;
+    color:white;
+    border:none;
+    padding:10px;
+    border-radius:5px;
+    cursor:pointer;
+}
+
+/* Cards */
+.cards {
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-bottom:20px;
+}
+.card {
+    flex:1 1 160px;
+    min-width:150px;
+    padding:16px;
+    color:white;
+    border-radius:10px;
+    font-size:16px;
+}
+
+.card1 { background:#3498db; }
+.card2 { background:#27ae60; }
+.card3 { background:#e67e22; }
+
+/* Chart */
+.section canvas {
+    width:100% !important;
+    max-width:480px;
+    max-height:320px;
+    margin:0 auto;
+    display:block;
+}
+
+/* Section */
+.section {
+    background:white;
+    padding:24px;
+    border-radius:22px;
+    margin-bottom:24px;
+    box-shadow:0 24px 60px rgba(28, 57, 85, 0.08);
+}
+
+.dashboard-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+}
+
+.weather-card,
+.sos-card {
+    background:#f7fbff;
+    border:1px solid #d8e6f1;
+    padding:20px;
+    border-radius:18px;
+}
+
+.weather-card h3,
+.sos-card h3 {
+    margin-bottom:14px;
+}
+
+.assistant-box {
+    background:#f9fbff;
+    border:1px solid #dde6f1;
+    padding:20px;
+    border-radius:18px;
+}
+
+.assistant-log {
+    min-height:160px;
+    max-height:260px;
+    overflow:auto;
+    background:#fff;
+    border:1px solid #dce4eb;
+    border-radius:14px;
+    padding:14px;
+    margin-bottom:14px;
+}
+
+.assistant-message {
+    margin-bottom:10px;
+    line-height:1.5;
+}
+
+.assistant-message.user {
+    color:#1f4775;
+    font-weight:700;
+}
+
+.assistant-message.bot {
+    color:#34495e;
+}
+
+.assistant-input-row {
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
+.assistant-input-row input {
+    flex:1;
+}
+
+.assistant-input-row button {
+    min-width:140px;
+}
+
+@media(max-width:900px) {
+    .dashboard-grid {
+        grid-template-columns:1fr;
+    }
+}
+
+/* Form */
+input, textarea, select {
+    width:100%;
+    padding:14px 16px;
+    margin:10px 0;
+    border-radius:14px;
+    border:1px solid #d5e0ea;
+    background:#f8fbff;
+    color:#1f3148;
+    font-size:15px;
+    transition:border-color .2s ease, box-shadow .2s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline:none;
+    border-color:#6aa0d4;
+    box-shadow:0 0 0 4px rgba(106, 160, 212, 0.16);
+}
+
+textarea {
+    min-height:120px;
+    resize:vertical;
+}
+
+button {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:14px 20px;
+    margin-top:10px;
+    margin-right:10px;
+    background:linear-gradient(135deg, #3366ff, #00b5ff);
+    color:white;
+    border:none;
+    border-radius:14px;
+    cursor:pointer;
+    box-shadow:0 14px 32px rgba(51, 102, 255, 0.18);
+    transition:transform .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+button:hover {
+    transform:translateY(-1px);
+    background:linear-gradient(135deg, #2f5ee0, #00a0e0);
+    box-shadow:0 18px 36px rgba(51, 102, 255, 0.22);
+}
+
+button:hover {
+    transform:translateY(-1px);
+    background:#2c80cc;
+}
+
+.small-btn {
+    padding:8px 12px;
+    font-size:13px;
+    border-radius:10px;
+    border:none;
+    background:#3498db;
+    color:white;
+    cursor:pointer;
+}
+
+.small-btn:hover {
+    background:#2572a3;
+}
+
+/* Table */
+table {
+    width:100%;
+    border-collapse:collapse;
+    font-size:14px;
+}
+
+th, td {
+    padding:14px 16px;
+    border-bottom:1px solid #eef3f7;
+}
+
+th {
+    color:#62778d;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+}
+
+tbody tr:hover {
+    background:#f5faff;
+}
+
+/* Status */
+.status { padding:3px 5px; border-radius:5px; color:white; }
+.pending { background:orange; }
+.in, .in-progress { background:blue; }
+.resolved { background:green; }
+
+/* Notification */
+#notification {
+    display:none;
+    background:#2ecc71;
+    color:white;
+    padding:10px;
+    border-radius:5px;
+    margin-bottom:10px;
+}
+
+/* Complaint Image */
+.complaint-image {
+    width:100px;
+    height:80px;
+    object-fit:cover;
+    border-radius:8px;
+}
+
+/* AI box */
+.ai-box {
+    background:#ecf0f1;
+    padding:16px;
+    border-radius:10px;
+    margin-top:18px;
+}
+
+#aqiPanel {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-top:10px;
+}
+
+.aqi-card {
+    background:#fafafa;
+    padding:18px;
+    border-radius:14px;
+    border:1px solid #dce4eb;
+}
+
+.aqi-card strong {
+    display:block;
+    margin-bottom:8px;
+    color:#34495e;
+}
+
+.aqi-status {
+    font-weight:700;
+}
+
+#aqiChart, #chart {
+    width:100%;
+    max-width:720px;
+    max-height:320px;
+    height:320px;
+    margin:0 auto;
+}
+
+#trafficMap {
+    width:100%;
+    height:320px;
+    max-height:380px;
+    border-radius:20px;
+    margin-top:16px;
+    overflow:hidden;
+    box-shadow:0 18px 40px rgba(17, 85, 150, 0.12);
+    background:#e8eef8;
+    position:relative;
+}
+
+#trafficMap::before {
+    content: "Loading map...";
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#556b86;
+    font-size:16px;
+    font-weight:600;
+    background:rgba(255,255,255,0.75);
+    z-index:3;
+    pointer-events:none;
+}
+
+#trafficMap.map-loaded::before {
+    display:none;
+}
+
+.leaflet-container {
+    background:#e8eef8;
+}
+
+.traffic-metrics {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+    margin-top:16px;
+}
+
+.traffic-card {
+    background:white;
+    padding:16px;
+    border-radius:12px;
+    box-shadow:0 10px 20px rgba(0,0,0,.08);
+}
+
+.section h3 {
+    margin-bottom:16px;
+    color:#2c3e50;
+}
+
+.sidebar a.active,
+.sidebar a:hover {
+    background:#34495e;
+}
+
+@media(max-width:1080px) {
+    body { flex-direction:column; }
+    .sidebar { position:relative; width:100%; height:auto; }
+    .main { margin-left:0; width:100%; }
+}
+</style>
+<link rel="stylesheet" href="theme.css">
+<script defer src="theme.js"></script>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <h2>🏙 Smart City</h2>
+    <a href="#weather-section">Weather & AQI</a>
+    <a href="#sos-section">Emergency SOS</a>
+    <a href="#aqi-section">Air Quality Index</a>
+    <a href="#stats-section">Complaint Stats</a>
+    <a href="#assistant-section">Smart Assistant</a>
+    <a href="#trending-section">Trending Complaints</a>
+    <a href="#register-section">Register Complaint</a>
+    <a href="#report-traffic-section">Report Traffic Issue</a>
+    <a href="#my-traffic-section">My Traffic Reports</a>
+    <a href="#my-complaints-section">My Complaints</a>
+    <a href="#profile-section">Profile</a>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+    <!-- Notification -->
+    <div id="notification"></div>
+
+    <!-- Top -->
+    <div class="topbar">
+        <h2 id="username"></h2>
+        <button class="logout" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Cards -->
+    <div class="cards">
+        <div class="card card1">Total: <span id="total">0</span></div>
+        <div class="card card2">Resolved: <span id="resolved">0</span></div>
+        <div class="card card3">Pending: <span id="pending">0</span></div>
+    </div>
+
+    <!-- Profile -->
+    <div class="section" id="profile-section">
+        <h3>👤 Profile</h3>
+        <p id="email"></p>
+        <p id="phone"></p>
+        <p id="points"></p>
+        <p id="badge"></p>
+    </div>
+
+    <div class="section" id="weather-section">
+        <div class="dashboard-grid">
+            <div class="weather-card" id="weather-card">
+                <h3>☀️ Weather & AQI</h3>
+                <p id="weatherCondition">Condition: -</p>
+                <p id="weatherTemp">Temperature: -</p>
+                <p id="weatherHumidity">Humidity: -</p>
+                <p id="weatherWind">Wind: -</p>
+                <p id="weatherAlert">Alert: -</p>
+                <button type="button" onclick="loadWeatherForCurrentLocation()">Refresh Weather</button>
+            </div>
+            <div class="sos-card" id="sos-section">
+                <h3>🚨 Emergency SOS</h3>
+                <p>Send your current location immediately to authorities.</p>
+                <button type="button" onclick="sendEmergencyAlert()">Send SOS</button>
+                <p id="sosStatus" style="margin-top:12px;font-size:14px;color:#34495e;"></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="aqi-section">
+        <h3>🌫️ Air Quality Index</h3>
+        <div class="aqi-card">
+            <strong>Current AQI</strong>
+            <p id="aqiValue">AQI: -</p>
+            <p id="aqiStatus" class="aqi-status">Status: -</p>
+            <p id="aqiLocation">Location: -</p>
+            <p id="aqiSuggestion">Suggestion: -</p>
+            <button type="button" onclick="preparePollutionComplaint()">Report pollution issue</button>
+        </div>
+        <div class="aqi-card">
+            <strong>7-day AQI Trend</strong>
+            <canvas id="aqiChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="section" id="stats-section">
+        <h3>📊 Complaint Stats</h3>
+        <canvas id="chart"></canvas>
+    </div>
+
+    <div class="section" id="assistant-section">
+        <h3>🧠 Smart Assistant</h3>
+        <div class="assistant-box">
+            <div id="assistantLog" class="assistant-log"></div>
+            <div class="assistant-input-row">
+                <input id="assistantInput" placeholder="Ask: How to register complaint?" />
+                <button type="button" onclick="sendAssistantMessage()">Ask</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="trending-section">
+        <h3>🔥 Trending Complaints</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Votes</th>
+                </tr>
+            </thead>
+            <tbody id="trendingBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Complaint Form -->
+    <div class="section" id="register-section">
+        <h3>📝 Register Complaint</h3>
+
+        <input id="title" placeholder="Title">
+        <textarea id="desc" placeholder="Description"></textarea>
+        <input id="location" placeholder="Location">
+        <input type="file" id="image">
+
+        <button type="button" onclick="detectLocation()">📍 Auto Location</button>
+        <button type="button" onclick="submitComplaint()">Submit</button>
+
+        <div class="ai-box">
+            <h4>🤖 AI Prediction</h4>
+            <p id="category">Category: -</p>
+            <p id="priority">Priority: -</p>
+        </div>
+    </div>
+
+    <div class="section" id="report-traffic-section">
+        <h3>🚦 Report Traffic Issue</h3>
+        <select id="issueType">
+            <option value="Traffic Jam">Traffic Jam</option>
+            <option value="Accident">Accident</option>
+            <option value="Signal Issue">Signal Issue</option>
+            <option value="Road Block">Road Block</option>
+        </select>
+        <textarea id="trafficDesc" placeholder="Describe issue"></textarea>
+        <input id="trafficLocation" placeholder="Location (address or lat,lng)">
+        <input type="file" id="trafficImage">
+        <button type="button" onclick="detectTrafficLocation()">📍 Auto Location</button>
+        <button type="button" onclick="submitTrafficReport()">Submit Traffic Issue</button>
+    </div>
+
+    <div class="section">
+        <h3>📍 Live Traffic Map</h3>
+        <div id="trafficMap"></div>
+        <div class="traffic-metrics">
+            <div class="traffic-card">
+                <strong>Nearby traffic condition</strong>
+                <p id="nearbyCondition">Loading...</p>
+            </div>
+            <div class="traffic-card">
+                <strong>Estimated delay time</strong>
+                <p id="delayEstimate">-</p>
+            </div>
+            <div class="traffic-card">
+                <strong>Latest alert</strong>
+                <p id="trafficAlert">No alerts right now.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="my-traffic-section">
+        <h3>📋 My Traffic Reports</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Issue</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="trafficBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Complaints Table -->
+    <div class="section" id="my-complaints-section">
+        <h3>📋 My Complaints</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Location</th>
+                    <th>Image</th>
+                    <th>Category</th>
+                    <th>Votes</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+            <div class="weather-card">
+                <h3>☀️ Weather & AQI</h3>
+                <p id="weatherCondition">Condition: -</p>
+                <p id="weatherTemp">Temperature: -</p>
+                <p id="weatherHumidity">Humidity: -</p>
+                <p id="weatherWind">Wind: -</p>
+                <p id="weatherAlert">Alert: -</p>
+                <button type="button" onclick="loadWeatherForCurrentLocation()">Refresh Weather</button>
+            </div>
+            <div class="sos-card">
+                <h3>🚨 Emergency SOS</h3>
+                <p>Send your current location immediately to authorities.</p>
+                <button type="button" onclick="sendEmergencyAlert()">Send SOS</button>
+                <p id="sosStatus" style="margin-top:12px;font-size:14px;color:#34495e;"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- AQI -->
+    <div class="section">
+        <h3>🌫️ Air Quality Index</h3>
+        <div class="aqi-card">
+            <strong>Current AQI</strong>
+            <p id="aqiValue">AQI: -</p>
+            <p id="aqiStatus" class="aqi-status">Status: -</p>
+            <p id="aqiLocation">Location: -</p>
+            <p id="aqiSuggestion">Suggestion: -</p>
+            <button type="button" onclick="preparePollutionComplaint()">Report pollution issue</button>
+        </div>
+        <div class="aqi-card">
+            <strong>7-day AQI Trend</strong>
+            <canvas id="aqiChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="section">
+        <h3>📊 Complaint Stats</h3>
+        <canvas id="chart"></canvas>
+    </div>
+
+    <div class="section">
+        <h3>🧠 Smart Assistant</h3>
+        <div class="assistant-box">
+            <div id="assistantLog" class="assistant-log"></div>
+            <div class="assistant-input-row">
+                <input id="assistantInput" placeholder="Ask: How to register complaint?" />
+                <button type="button" onclick="sendAssistantMessage()">Ask</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>🔥 Trending Complaints</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Votes</th>
+                </tr>
+            </thead>
+            <tbody id="trendingBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Complaint Form -->
+    <div class="section">
+        <h3>📝 Register Complaint</h3>
+
+        <input id="title" placeholder="Title">
+        <textarea id="desc" placeholder="Description"></textarea>
+        <input id="location" placeholder="Location">
+        <input type="file" id="image">
+
+        <button type="button" onclick="detectLocation()">📍 Auto Location</button>
+        <button type="button" onclick="submitComplaint()">Submit</button>
+
+        <div class="ai-box">
+            <h4>🤖 AI Prediction</h4>
+            <p id="category">Category: -</p>
+            <p id="priority">Priority: -</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>🚦 Report Traffic Issue</h3>
+        <select id="issueType">
+            <option value="Traffic Jam">Traffic Jam</option>
+            <option value="Accident">Accident</option>
+            <option value="Signal Issue">Signal Issue</option>
+            <option value="Road Block">Road Block</option>
+        </select>
+        <textarea id="trafficDesc" placeholder="Describe issue"></textarea>
+        <input id="trafficLocation" placeholder="Location (address or lat,lng)">
+        <input type="file" id="trafficImage">
+        <button type="button" onclick="detectTrafficLocation()">📍 Auto Location</button>
+        <button type="button" onclick="submitTrafficReport()">Submit Traffic Issue</button>
+    </div>
+
+    <div class="section">
+        <h3>📍 Live Traffic Map</h3>
+        <div id="trafficMap"></div>
+        <div class="traffic-metrics">
+            <div class="traffic-card">
+                <strong>Nearby traffic condition</strong>
+                <p id="nearbyCondition">Loading...</p>
+            </div>
+            <div class="traffic-card">
+                <strong>Estimated delay time</strong>
+                <p id="delayEstimate">-</p>
+            </div>
+            <div class="traffic-card">
+                <strong>Latest alert</strong>
+                <p id="trafficAlert">No alerts right now.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>📋 My Traffic Reports</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Issue</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="trafficBody"></tbody>
+        </table>
+    </div>
+
+    <!-- Complaints Table -->
+    <div class="section">
+        <h3>📋 My Complaints</h3>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Location</th>
+                    <th>Image</th>
+                    <th>Category</th>
+                    <th>Votes</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+const user = JSON.parse(localStorage.getItem("user"));
+
+if (!token || !user) {
+    window.location.href = "userlogin.html";
+}
+
+const titleInput = document.getElementById("title");
+const descInput = document.getElementById("desc");
+const locationInput = document.getElementById("location");
+const imageInput = document.getElementById("image");
+const categoryLabel = document.getElementById("category");
+const priorityLabel = document.getElementById("priority");
+const tableBody = document.getElementById("tableBody");
+const totalCount = document.getElementById("total");
+const resolvedCount = document.getElementById("resolved");
+const pendingCount = document.getElementById("pending");
+
+const issueTypeInput = document.getElementById("issueType");
+const trafficDescInput = document.getElementById("trafficDesc");
+const trafficLocationInput = document.getElementById("trafficLocation");
+const trafficImageInput = document.getElementById("trafficImage");
+const trafficBody = document.getElementById("trafficBody");
+const nearbyCondition = document.getElementById("nearbyCondition");
+const delayEstimate = document.getElementById("delayEstimate");
+const trafficAlert = document.getElementById("trafficAlert");
+const trafficMapContainer = document.getElementById("trafficMap");
+
+const aqiValue = document.getElementById('aqiValue');
+const aqiStatus = document.getElementById('aqiStatus');
+const aqiLocation = document.getElementById('aqiLocation');
+const aqiSuggestion = document.getElementById('aqiSuggestion');
+const aqiChartCanvas = document.getElementById('aqiChart');
+
+const weatherCondition = document.getElementById('weatherCondition');
+const weatherTemp = document.getElementById('weatherTemp');
+const weatherHumidity = document.getElementById('weatherHumidity');
+const weatherWind = document.getElementById('weatherWind');
+const weatherAlert = document.getElementById('weatherAlert');
+const sosStatus = document.getElementById('sosStatus');
+const assistantLog = document.getElementById('assistantLog');
+const assistantInput = document.getElementById('assistantInput');
+const trendingBody = document.getElementById('trendingBody');
+const pointsLabel = document.getElementById('points');
+const badgeLabel = document.getElementById('badge');
+
+let trafficMap = null;
+let trafficMarkers = null;
+let complaintMarkers = null;
+let aqiChartInstance = null;
+let forcedComplaintCategory = null;
+let forcedComplaintPriority = null;
+let socket = null;
+
+document.getElementById("username").innerText = "Welcome, " + user.name + " 👋";
+document.getElementById("email").innerText = "Email: " + (user.email || "-");
+document.getElementById("phone").innerText = "Phone: " + (user.mobile || user.phone || "-");
+
+/* Notification */
+function showNotification(msg, success = true) {
+    const box = document.getElementById("notification");
+    box.innerText = msg;
+    box.style.display = "block";
+    box.style.background = success ? "#2ecc71" : "#e74c3c";
+    setTimeout(() => box.style.display = "none", 3000);
+}
+
+function initSocket() {
+    if (!window.io) return;
+    try {
+        socket = io();
+        socket.on('connect', () => {
+            console.log('Socket connected', socket.id);
+        });
+        socket.on('notification', data => {
+            if (data && data.message) {
+                showNotification(data.message, true);
+            }
+        });
+    } catch (error) {
+        console.warn('Socket.io unavailable', error);
+    }
+}
+
+function addAssistantMessage(role, message) {
+    if (!assistantLog) return;
+    const item = document.createElement('div');
+    item.className = `assistant-message ${role}`;
+    item.innerText = `${role === 'user' ? 'You:' : 'Assistant:'} ${message}`;
+    assistantLog.appendChild(item);
+    assistantLog.scrollTop = assistantLog.scrollHeight;
+}
+
+function getAssistantResponse(query) {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) {
+        return 'Ask me about complaints, SOS alerts, AQI readings, traffic reports or project features. I can help you solve issues step-by-step.';
+    }
+    if (normalized.includes('water')) {
+        return 'It looks like a water issue. Use the complaint form with a clear title, describe the leakage or shortage, add your exact location, then submit. The system will auto-tag it and notify admins.';
+    }
+    if (normalized.includes('register') || normalized.includes('help') || normalized.includes('complaint')) {
+        return 'To register a complaint, fill in title, description, location, and optionally attach an image. You can use the SOS button for emergencies and the trend panel to see high-priority issues.';
+    }
+    if (normalized.includes('sos') || normalized.includes('emergency')) {
+        return 'The SOS feature sends an urgent alert with your location to admins and authorities. Use it when there is a serious incident like fire, medical emergency, or danger in your area.';
+    }
+    if (normalized.includes('traffic')) {
+        return 'Traffic reports capture congestion, accidents, signal issues and road blocks. Submit your issue, and the live map will show nearby reports along with suggested delay information.';
+    }
+    if (normalized.includes('aqi') || normalized.includes('air quality') || normalized.includes('pollution')) {
+        return 'AQI gives you a health-safe score. If the air quality is poor, avoid outdoor activity, wear a mask, and submit a pollution complaint so authorities can act.';
+    }
+    if (normalized.includes('weather') || normalized.includes('temperature') || normalized.includes('rain')) {
+        return 'The weather panel shows current temperature, humidity, wind and rain alerts. Refresh it with your location so you get the latest local forecast.';
+    }
+    if (normalized.includes('vote') || normalized.includes('upvote') || normalized.includes('trending')) {
+        return 'Users can upvote complaints to raise priority. Trending complaints are those with the most votes, making it easier for admins to identify urgent city issues.';
+    }
+    if (normalized.includes('priority') || normalized.includes('high') || normalized.includes('low')) {
+        return 'The system uses priority labels to classify issues. High priority is for dangerous or urgent problems, while medium and low are for routine fixes.';
+    }
+    if (normalized.includes('problem') || normalized.includes('error') || normalized.includes('issue')) {
+        return 'Tell me the exact problem you are facing in the app. I can help you troubleshoot complaints, SOS, traffic reporting, or map and weather features.';
+    }
+    if (normalized.includes('project') || normalized.includes('feature') || normalized.includes('analysis')) {
+        return 'This project is a smart city complaint system with AI-based complaint tagging, traffic mapping, AQI/weather dashboard, SOS alerts, and real-time notifications. Ask me about any section or how to improve it.';
+    }
+    return 'I can help with complaint submission, SOS support, weather/AQI alerts, traffic reporting, and trending city issues. Ask a specific question about the app and I will give you actionable guidance.';
+}
+
+async function sendAssistantMessage() {
+    const message = assistantInput.value.trim();
+    if (!message) {
+        showNotification('Please type a question for the assistant.', false);
+        return;
+    }
+    addAssistantMessage('user', message);
+    const response = getAssistantResponse(message);
+    addAssistantMessage('bot', response);
+    assistantInput.value = '';
+}
+
+async function updateProfileUI() {
+    try {
+        const data = await apiFetch('/api/profile');
+        if (data) {
+            document.getElementById("username").innerText = "Welcome, " + data.name + " 👋";
+            document.getElementById("email").innerText = "Email: " + (data.email || "-");
+            document.getElementById("phone").innerText = "Phone: " + (data.mobile || data.phone || "-");
+            if (pointsLabel) pointsLabel.innerText = `Points: ${data.points || 0}`;
+            if (badgeLabel) badgeLabel.innerText = `Badge: ${data.badge || 'Active Citizen'}`;
+        }
+    } catch (error) {
+        console.warn('Unable to load profile info.', error);
+    }
+}
+
+async function loadWeather(lat, lon) {
+    try {
+        const data = await apiFetch(`/api/weather?lat=${lat}&lon=${lon}`);
+        weatherCondition.innerText = `Condition: ${data.condition || '-'} (${data.description || '-'})`;
+        weatherTemp.innerText = `Temperature: ${data.temperature ?? '-'} °C`;
+        weatherHumidity.innerText = `Humidity: ${data.humidity ?? '-'}%`;
+        weatherWind.innerText = `Wind: ${data.windSpeed ?? '-'} m/s`;
+        weatherAlert.innerText = `Alert: ${data.rainAlert || 'No rain expected.'}`;
+    } catch (error) {
+        console.error('Weather load error:', error);
+        weatherAlert.innerText = 'Weather data unavailable.';
+    }
+}
+
+async function loadWeatherForCurrentLocation() {
+    if (!navigator.geolocation) {
+        showNotification('Geolocation is not supported by your browser.', false);
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        async position => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            await loadWeather(lat, lon);
+        },
+        error => {
+            console.error('Weather geolocation error:', error);
+            showNotification('Unable to detect location for weather.', false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+}
+
+async function sendEmergencyAlert() {
+    if (!navigator.geolocation) {
+        showNotification('Geolocation is not supported by your browser.', false);
+        return;
+    }
+    sosStatus.innerText = 'Detecting your location...';
+    navigator.geolocation.getCurrentPosition(
+        async position => {
+            const location = `${position.coords.latitude}, ${position.coords.longitude}`;
+            try {
+                const data = await apiFetch('/api/emergency/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: 'SOS alert from mobile user.',
+                        location,
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    }),
+                });
+                sosStatus.innerText = 'SOS sent successfully. Authorities notified.';
+                showNotification('Emergency alert sent successfully.');
+            } catch (error) {
+                console.error('Send SOS error:', error);
+                sosStatus.innerText = 'Unable to send SOS. Try again.';
+                showNotification(error.message || 'Failed to send SOS.', false);
+            }
+        },
+        error => {
+            console.error('SOS geolocation error:', error);
+            sosStatus.innerText = 'Location required for SOS.';
+            showNotification('Unable to detect location for SOS.', false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+}
+
+async function loadTrendingComplaints() {
+    try {
+        const data = await apiFetch('/api/complaint/trending');
+        const complaints = Array.isArray(data.complaints) ? data.complaints : [];
+        trendingBody.innerHTML = complaints.length
+            ? complaints.map(item => `
+                <tr>
+                    <td>${item.title || '-'}</td>
+                    <td>${item.category || '-'}</td>
+                    <td>${item.votes || 0}</td>
+                </tr>`).join('')
+            : '<tr><td colspan="3" style="text-align:center;padding:18px;color:#7d8fa8;">No trending complaints yet.</td></tr>';
+    } catch (error) {
+        console.error('Trending load error:', error);
+    }
+}
+
+function refreshComplaintMarkers(reports) {
+    if (typeof L === 'undefined') {
+        return;
+    }
+    if (!trafficMap) {
+        initTrafficMap();
+    }
+    if (!complaintMarkers) {
+        complaintMarkers = L.layerGroup().addTo(trafficMap);
+    }
+    complaintMarkers.clearLayers();
+    const positions = [];
+    reports.forEach(report => {
+        if (report.lat && report.lng) {
+            const marker = L.circleMarker([report.lat, report.lng], {
+                radius: 8,
+                color: '#2980b9',
+                fillColor: '#2980b9',
+                fillOpacity: 0.85,
+                weight: 1
+            }).bindPopup(`<strong>${report.title || report.category || 'Complaint'}</strong><br>${report.location || 'Unknown location'}<br>Votes: ${report.votes || 0}`);
+            complaintMarkers.addLayer(marker);
+            positions.push([report.lat, report.lng]);
+        }
+    });
+    if (positions.length && (!trafficMarkers || trafficMarkers.getLayers().length === 0)) {
+        const bounds = L.latLngBounds(positions);
+        trafficMap.fitBounds(bounds.pad(0.3));
+    }
+}
+
+async function voteComplaint(id) {
+    try {
+        await apiFetch(`/api/complaint/vote/${id}`, { method: 'POST' });
+        showNotification('Thanks! Complaint upvoted.');
+        loadComplaints();
+        loadTrendingComplaints();
+    } catch (error) {
+        console.error('Vote failed:', error);
+        showNotification(error.message || 'Unable to upvote complaint.', false);
+    }
+}
+
+async function apiFetch(url, options = {}) {
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            ...(options.headers || {}),
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const message = errorData.error || errorData.message || "Request failed";
+        throw new Error(`${message} (${response.status})`);
+    }
+
+    return response.json();
+}
+
+let chartInstance = null;
+
+/* Dashboard */
+async function loadDashboard() {
+    try {
+        const data = await apiFetch("/api/user/dashboard");
+
+        totalCount.innerText = data.total || 0;
+        resolvedCount.innerText = data.resolved || 0;
+        pendingCount.innerText = data.pending || 0;
+        if (pointsLabel && typeof data.points !== 'undefined') {
+            pointsLabel.innerText = `Points: ${data.points}`;
+        }
+        if (badgeLabel && data.badge) {
+            badgeLabel.innerText = `Badge: ${data.badge}`;
+        }
+
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        chartInstance = new Chart(document.getElementById("chart"), {
+            type: "doughnut",
+            data: {
+                labels: ["Resolved", "Pending"],
+                datasets: [{
+                    data: [data.resolved || 0, data.pending || 0],
+                    backgroundColor: ["#27ae60", "#f39c12"],
+                }],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: "bottom" },
+                },
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        showNotification(error.message || "Unable to load dashboard.", false);
+    }
+}
+
+/* Complaints */
+async function loadComplaints() {
+    try {
+        const data = await apiFetch("/api/complaint/my");
+        const complaints = Array.isArray(data)
+            ? data
+            : Array.isArray(data.complaints)
+                ? data.complaints
+                : [];
+        let html = "";
+
+        if (complaints.length > 0) {
+            complaints.forEach(c => {
+                const statusClass = c.status ? c.status.toLowerCase().replace(/\s+/g, '-') : "pending";
+                const shortDescription = c.description ? (c.description.length > 120 ? c.description.slice(0, 120) + '...' : c.description) : '-';
+                html += `
+                    <tr>
+                        <td>${c.title || "-"}</td>
+                        <td>${shortDescription}</td>
+                        <td>${c.location || '-'}</td>
+                        <td>${c.image ? `<img class="complaint-image" src="/uploads/${c.image}" alt="Complaint image">` : "-"}</td>
+                        <td>${c.category || "-"}</td>
+                        <td>${c.votes || 0}</td>
+                        <td><span class="status ${statusClass}">${c.status || "Pending"}</span></td>
+                        <td>${c.createdAt ? new Date(c.createdAt).toLocaleDateString() : '-'}</td>
+                        <td><button class="small-btn" onclick="voteComplaint('${c._id}')">Upvote</button></td>
+                    </tr>`;
+            });
+        } else {
+            html = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#7d8fa8;">No complaints found yet. Submit one to see it listed here.</td></tr>`;
+        }
+
+        tableBody.innerHTML = html;
+        refreshComplaintMarkers(complaints);
+    } catch (error) {
+        console.error(error);
+        tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#b3372f;">Unable to load complaints.</td></tr>`;
+        showNotification(error.message || "Unable to load complaints.", false);
+    }
+}
+
+function getAqiDetails(index) {
+    switch (index) {
+        case 1:
+            return { value: 25, category: 'Good', color: 'green', suggestion: 'Enjoy outdoor activities 😊' };
+        case 2:
+            return { value: 75, category: 'Moderate', color: 'yellow', suggestion: 'Air quality is moderate. Stay aware.' };
+        case 3:
+            return { value: 150, category: 'Poor', color: 'orange', suggestion: 'Avoid long outdoor exposure 😷' };
+        case 4:
+            return { value: 250, category: 'Very Poor', color: 'red', suggestion: 'Limit outdoor activities 🚫' };
+        case 5:
+            return { value: 350, category: 'Hazardous', color: 'black', suggestion: 'Stay indoors and keep windows closed ⚫' };
+        default:
+            return { value: 75, category: 'Moderate', color: 'yellow', suggestion: 'Air quality is moderate. Stay aware.' };
+    }
+}
+
+function renderAqiData(data) {
+    aqiValue.innerText = `AQI: ${data.aqi}`;
+    aqiStatus.innerText = `Status: ${data.category}`;
+    aqiLocation.innerText = `Location: ${data.location}`;
+    aqiSuggestion.innerText = `Suggestion: ${data.suggestion}`;
+    aqiStatus.style.color = data.color;
+}
+
+function renderAqiTrend(records) {
+    if (!aqiChartCanvas) return;
+    const labels = records.map(record => new Date(record.createdAt).toLocaleDateString());
+    const values = records.map(record => record.aqi || 0);
+
+    if (aqiChartInstance) {
+        aqiChartInstance.destroy();
+    }
+
+    aqiChartInstance = new Chart(aqiChartCanvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'AQI',
+                data: values,
+                borderColor: '#2c80cc',
+                backgroundColor: 'rgba(46, 134, 193, 0.2)',
+                fill: true,
+                tension: 0.25,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 400,
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+}
+
+async function loadAqiHistory() {
+    try {
+        const data = await apiFetch('/api/aqi/history');
+        const records = Array.isArray(data.records) ? data.records : [];
+        if (records.length > 0) {
+            renderAqiTrend(records);
+        }
+    } catch (error) {
+        console.warn('AQI history not available:', error);
+    }
+}
+
+async function loadAqi(lat, lon) {
+    try {
+        const data = await apiFetch(`/api/aqi?lat=${lat}&lon=${lon}`);
+        renderAqiData(data);
+        await loadAqiHistory();
+    } catch (error) {
+        console.error('AQI load error:', error);
+        showNotification(error.message || 'Unable to load AQI data.', false);
+    }
+}
+
+function loadAqiForCurrentLocation() {
+    if (!navigator.geolocation) {
+        showNotification('Geolocation is not supported by your browser.', false);
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        async position => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            await loadAqi(lat, lon);
+        },
+        error => {
+            console.error('AQI geolocation error:', error);
+            showNotification('Unable to detect location for AQI. Please allow location access.', false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+}
+
+function preparePollutionComplaint() {
+    forcedComplaintCategory = 'Air Pollution';
+    forcedComplaintPriority = 'High';
+    titleInput.value = 'Air Pollution Report';
+    descInput.value = `Air quality is poor at ${aqiLocation.innerText.replace('Location: ', '')}. Please investigate pollution levels.`;
+    locationInput.value = aqiLocation.innerText.replace('Location: ', '');
+    categoryLabel.innerText = 'Category: Air Pollution';
+    priorityLabel.innerText = 'Priority: High';
+    showNotification('Pollution complaint preset ready. Submit your complaint.');
+}
+
+function getTrafficSeverity(issueType) {
+    const heavy = ['Accident', 'Signal Issue', 'Road Block'];
+    return heavy.includes(issueType) ? 'Heavy' : 'Medium';
+}
+
+function getTrafficMarkerColor(issueType) {
+    switch (issueType) {
+        case 'Accident':
+        case 'Signal Issue':
+        case 'Road Block':
+            return 'red';
+        case 'Traffic Jam':
+            return 'orange';
+        default:
+            return 'green';
+    }
+}
+
+function loadLeafletAssets() {
+    return new Promise((resolve, reject) => {
+        if (typeof L !== 'undefined') {
+            return resolve();
+        }
+
+        const loadCss = () => {
+            if (document.querySelector('link[href*="leaflet"]')) return;
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+            link.crossOrigin = '';
+            document.head.appendChild(link);
+        };
+
+        const existingScript = document.querySelector('script[src*="leaflet"]');
+        if (existingScript) {
+            existingScript.remove();
+        }
+
+        loadCss();
+
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.id = 'leafletScriptLoader';
+        script.crossOrigin = '';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Unable to load Leaflet library'));
+        document.head.appendChild(script);
+    });
+}
+
+function displayTrafficMapFallback(message) {
+    if (!trafficMapContainer) return;
+    trafficMapContainer.classList.add('map-loaded');
+    trafficMapContainer.innerHTML = `
+        <div style="padding:32px;text-align:center;color:#556b86;">
+            <div>${message}</div>
+            <button id="trafficMapRetry" style="margin-top:16px;padding:10px 18px;border:none;border-radius:10px;background:#2c80cc;color:white;cursor:pointer;">Retry map</button>
+        </div>`;
+    const retryButton = document.getElementById('trafficMapRetry');
+    if (retryButton) {
+        retryButton.addEventListener('click', async () => {
+            retryButton.disabled = true;
+            retryButton.innerText = 'Retrying...';
+            showNotification('Retrying map load...', true);
+            try {
+                await loadLeafletAssets();
+                trafficMapContainer.innerHTML = '';
+                trafficMapContainer.classList.remove('map-loaded');
+                initTrafficMap();
+                loadTrafficReports();
+            } catch (err) {
+                retryButton.disabled = false;
+                retryButton.innerText = 'Retry map';
+                showNotification('Still unable to load the map. Check your connection.', false);
+            }
+        });
+    }
+}
+
+function initTrafficMap() {
+    if (trafficMap) return;
+    if (typeof L === 'undefined') {
+        console.warn('Leaflet is not loaded. Live traffic map will be unavailable.');
+        displayTrafficMapFallback('Live map unavailable. Please check your connection or allow Leaflet access.');
+        return;
+    }
+    if (!trafficMapContainer) return;
+    trafficMap = L.map('trafficMap').setView([20.5937, 78.9629], 5);
+    const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(trafficMap);
+    trafficMarkers = L.layerGroup().addTo(trafficMap);
+
+    const setMapReady = () => {
+        if (trafficMapContainer) {
+            trafficMapContainer.classList.add('map-loaded');
+        }
+        trafficMap.invalidateSize();
+    };
+
+    tileLayer.on('load', setMapReady);
+    trafficMap.whenReady(setMapReady);
+    setTimeout(setMapReady, 800);
+}
+
+function refreshTrafficMap(reports) {
+    if (typeof L === 'undefined') {
+        return;
+    }
+    if (!trafficMap) {
+        initTrafficMap();
+    }
+
+    if (!trafficMarkers) {
+        trafficMarkers = L.layerGroup().addTo(trafficMap);
+    }
+
+    trafficMarkers.clearLayers();
+    const positions = [];
+
+    reports.forEach(report => {
+        if (report.lat && report.lng) {
+            const marker = L.circleMarker([report.lat, report.lng], {
+                radius: 8,
+                color: getTrafficMarkerColor(report.issueType),
+                fillColor: getTrafficMarkerColor(report.issueType),
+                fillOpacity: 0.8,
+                weight: 1,
+            }).bindPopup(`<strong>${report.issueType}</strong><br>${report.location || 'Unknown location'}<br>Status: ${report.status || 'Pending'}`);
+            trafficMarkers.addLayer(marker);
+            positions.push([report.lat, report.lng]);
+        }
+    });
+
+    if (positions.length) {
+        const bounds = L.latLngBounds(positions);
+        trafficMap.fitBounds(bounds.pad(0.3));
+    }
+    setTimeout(() => trafficMap.invalidateSize(), 300);
+}
+
+function updateTrafficPanel(reports) {
+    const heavyCount = reports.filter(r => getTrafficSeverity(r.issueType) === 'Heavy').length;
+    const mediumCount = reports.filter(r => getTrafficSeverity(r.issueType) === 'Medium').length;
+    nearbyCondition.innerText = heavyCount > 0 ? 'Heavy traffic nearby' : mediumCount > 0 ? 'Moderate traffic' : 'Clear and smooth';
+    delayEstimate.innerText = heavyCount > 0 ? '25-40 minutes' : mediumCount > 0 ? '10-20 minutes' : 'No significant delay';
+    trafficAlert.innerText = heavyCount > 0 ? 'Stay alert: heavy traffic reported nearby.' : 'No serious alerts in your area.';
+}
+
+async function loadTrafficReports() {
+    try {
+        const data = await apiFetch('/api/traffic/my');
+        const reports = Array.isArray(data)
+            ? data
+            : Array.isArray(data.traffic)
+                ? data.traffic
+                : [];
+
+        if (reports.length === 0) {
+            trafficBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:#7d8fa8;">No traffic reports yet. Submit one above to show live traffic.</td></tr>';
+            updateTrafficPanel([]);
+            if (trafficMarkers) trafficMarkers.clearLayers();
+            return;
+        }
+
+        trafficBody.innerHTML = reports.map(report => {
+            const statusClass = report.status ? report.status.toLowerCase().replace(/\s+/g, '-') : 'pending';
+            return `
+                <tr>
+                    <td>${report.issueType}</td>
+                    <td>${report.location || '-'}</td>
+                    <td><span class="status ${statusClass}">${report.status || 'Pending'}</span></td>
+                    <td>${report.createdAt ? new Date(report.createdAt).toLocaleDateString() : '-'}</td>
+                </tr>`;
+        }).join('');
+
+        updateTrafficPanel(reports);
+        try {
+            refreshTrafficMap(reports);
+            setTimeout(() => trafficMap && trafficMap.invalidateSize(), 400);
+        } catch (mapError) {
+            console.warn('Traffic map render failed:', mapError);
+            if (trafficMapContainer) {
+                trafficMapContainer.classList.add('map-loaded');
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        trafficBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:#b3372f;">Unable to load traffic reports.</td></tr>';
+        if (trafficMapContainer) {
+            trafficMapContainer.classList.add('map-loaded');
+        }
+        showNotification(error.message || 'Unable to load traffic reports.', false);
+    }
+}
+
+async function submitTrafficReport() {
+    const issueType = issueTypeInput.value;
+    const description = trafficDescInput.value.trim();
+    const locationValue = trafficLocationInput.value.trim();
+
+    if (!issueType || !description || !locationValue) {
+        showNotification('Please complete all traffic fields.', false);
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('issueType', issueType);
+    formData.append('description', description);
+    formData.append('location', locationValue);
+    if (trafficImageInput.files && trafficImageInput.files[0]) {
+        formData.append('image', trafficImageInput.files[0]);
+    }
+
+    try {
+        await fetch('/api/traffic/add', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+        });
+        showNotification('Traffic issue reported successfully!');
+        trafficDescInput.value = '';
+        trafficLocationInput.value = '';
+        trafficImageInput.value = '';
+        loadTrafficReports();
+    } catch (error) {
+        console.error(error);
+        showNotification(error.message || 'Failed to report traffic issue.', false);
+    }
+}
+
+function detectTrafficLocation() {
+    if (!navigator.geolocation) {
+        showNotification('Geolocation is not supported by your browser.', false);
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            trafficLocationInput.value = `${pos.coords.latitude}, ${pos.coords.longitude}`;
+            showNotification('Traffic location detected successfully.');
+        },
+        err => {
+            console.error('Traffic geolocation error:', err);
+            showNotification('Unable to detect location. Enter it manually.', false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+}
+
+/* Submit */
+async function submitComplaint() {
+    const title = titleInput.value.trim();
+    const description = descInput.value.trim();
+    const locationValue = locationInput.value.trim();
+
+    if (!title || !description || !locationValue) {
+        showNotification("Please complete all complaint fields.", false);
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("location", locationValue);
+    if (imageInput.files && imageInput.files[0]) {
+        formData.append("image", imageInput.files[0]);
+    }
+
+    let categoryText = forcedComplaintCategory || "General";
+    let priorityText = forcedComplaintPriority || "Medium";
+
+    if (!forcedComplaintCategory && !forcedComplaintPriority) {
+        try {
+            const mlRes = await fetch("http://localhost:5001/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ complaint: description }),
+            });
+
+            if (mlRes.ok) {
+                const ml = await mlRes.json();
+                categoryText = ml.category || categoryText;
+                priorityText = ml.priority || priorityText;
+            }
+        } catch (error) {
+            console.warn("ML service unavailable, using fallback values.", error);
+        }
+    }
+
+    categoryLabel.innerText = "Category: " + categoryText;
+    priorityLabel.innerText = "Priority: " + priorityText;
+
+    formData.append("category", categoryText);
+    formData.append("priority", priorityText);
+
+    try {
+        await apiFetch("/api/complaint/add", {
+            method: "POST",
+            body: formData,
+        });
+
+        forcedComplaintCategory = null;
+        forcedComplaintPriority = null;
+
+        showNotification("Complaint submitted successfully!");
+        titleInput.value = "";
+        descInput.value = "";
+        locationInput.value = "";
+        imageInput.value = "";
+        loadComplaints();
+        loadDashboard();
+    } catch (error) {
+        console.error(error);
+        showNotification(error.message || "Unable to submit complaint.", false);
+    }
+}
+
+/* Location */
+function detectLocation() {
+    if (!navigator.geolocation) {
+        showNotification("Geolocation is not supported by your browser.", false);
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            locationInput.value = `${pos.coords.latitude}, ${pos.coords.longitude}`;
+            showNotification("Location detected successfully.");
+        },
+        err => {
+            console.error("Geolocation error:", err);
+            showNotification("Unable to detect location. Please enter it manually.", false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+}
+
+/* Logout */
+function logout() {
+    localStorage.clear();
+    window.location.href = "userlogin.html";
+}
+
+/* Load */
+window.addEventListener('load', () => {
+    initSocket();
+    loadDashboard();
+    updateProfileUI();
+    loadComplaints();
+    loadAqiForCurrentLocation();
+    loadWeatherForCurrentLocation();
+    loadTrendingComplaints();
+    initTrafficMap();
+    loadTrafficReports();
+});
+</script>
+
+</body>
+</html>

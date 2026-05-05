@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart City - Home</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="theme.css">
+<script defer src="theme.js"></script>
+<style>
+:root {
+    --primary:#2c3e50;
+    --secondary:#00cec9;
+    --accent:#e74c3c;
+    --light:#ecf0f1;
+    --shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Segoe UI",sans-serif;}
+body{background:#f9f9f9;}
+header{background:white;position:sticky;top:0;z-index:1000;box-shadow:var(--shadow);}
+.container{width:90%;max-width:1200px;margin:auto;}
+.header-container{display:flex;justify-content:space-between;align-items:center;padding:20px 0;}
+.logo{font-size:24px;font-weight:bold;color:var(--primary);}
+.logo span{color:var(--secondary);}
+nav ul{display:flex;list-style:none;gap:25px;}
+nav a{text-decoration:none;color:var(--primary);font-weight:600;}
+nav a:hover{color:var(--secondary);}
+.auth{display:flex;gap:10px;}
+.btn{padding:10px 20px;border-radius:25px;cursor:pointer;border:none;font-weight:600;transition:0.3s;}
+.btn-primary{background:var(--secondary);color:white;}
+.btn-primary:hover{transform:translateY(-2px);}
+.btn-outline{border:2px solid var(--secondary);background:transparent;color:var(--secondary);}
+.btn-outline:hover{background:var(--secondary);color:white;}
+.hero{height:90vh;display:flex;align-items:center;color:white;position:relative;overflow:hidden;}
+.slider{position:absolute;width:100%;height:100%;overflow:hidden;top:0;left:0;z-index:1;}
+.slides{display:flex;width:500%;height:100%;animation:slide 6s infinite;}
+.slides img{width:100%;height:100%;object-fit:cover;}
+.hero::before{content:"";position:absolute;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:2;}
+.hero-content{position:relative;z-index:3;max-width:700px;padding:0 20px;}
+.hero h1{font-size:3rem;}
+.hero p{margin:15px 0;font-size:1.1rem;line-height:1.8;}
+@keyframes slide{0%{margin-left:0;}20%{margin-left:0;}25%{margin-left:-100%;}45%{margin-left:-100%;}50%{margin-left:-200%;}70%{margin-left:-200%;}75%{margin-left:-300%;}95%{margin-left:-300%;}100%{margin-left:-400%;}}
+section{padding:70px 0;}
+.section-title{text-align:center;margin-bottom:40px;}
+.section-title h2{font-size:2.5rem;}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:25px;}
+.card{background:white;padding:25px;border-radius:10px;text-align:center;box-shadow:var(--shadow);transition:0.3s;}
+.card:hover{transform:translateY(-10px);}
+.icon{font-size:40px;color:var(--secondary);margin-bottom:10px;}
+.steps{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;}
+.step{flex:1;text-align:center;}
+.step-number{background:var(--secondary);color:white;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:auto;font-size:20px;margin-bottom:10px;}
+.cta{background:linear-gradient(135deg,#00cec9,#0984e3);color:white;text-align:center;}
+footer{background:var(--primary);color:white;text-align:center;padding:20px;}
+@media(max-width:768px){nav ul{display:none;}}
+</style>
+</head>
+<body>
+<header>
+<div class="container header-container">
+    <div class="logo">Smart<span>City</span></div>
+    <nav>
+        <ul>
+            <li><a href="home.html">Home</a></li>
+            <li><a href="services.html">Services</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="connect.html">Connect</a></li>
+        </ul>
+    </nav>
+    <div class="auth">
+        <button class="btn btn-outline" onclick="location.href='userlogin.html'">Login</button>
+        <button class="btn btn-primary" onclick="location.href='usersignup.html'">Signup</button>
+    </div>
+</div>
+</header>
+<section class="hero">
+<div class="slider">
+    <div class="slides">
+        <img src="https://images.unsplash.com/photo-1508057198894-247b23fe5ade">
+        <img src="https://images.unsplash.com/photo-1494526585095-c41746248156">
+        <img src="https://images.unsplash.com/photo-1467269204594-9661b134dd2b">
+        <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee">
+        <img src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b">
+    </div>
+</div>
+<div class="container hero-content">
+    <h1>Smart City Complaint System</h1>
+    <p>AI-powered urban services for citizens, complaint tracking, traffic monitoring, and city safety.</p>
+    <button class="btn btn-primary" onclick="location.href='userlogin.html'">User Login</button>
+    <button class="btn btn-outline" onclick="location.href='admin-login.html'">Admin Panel</button>
+</div>
+</section>
+<section>
+<div class="container">
+<div class="section-title"><h2>What This Project Offers</h2></div>
+<div class="cards">
+    <div class="card"><div class="icon"><i class="fas fa-file-alt"></i></div><h3>Complaint Management</h3><p>Submit issues for roads, utilities, pollution, safety and get live updates.</p></div>
+    <div class="card"><div class="icon"><i class="fas fa-robot"></i></div><h3>AI Prioritization</h3><p>Machine learning ranks complaints automatically so critical issues are handled first.</p></div>
+    <div class="card"><div class="icon"><i class="fas fa-map-marker-alt"></i></div><h3>Live Location Map</h3><p>See reported incidents on a city map and track nearby traffic alerts in real time.</p></div>
+</div>
+</div>
+</section>
+<section style="background:#ecf0f1;">
+<div class="container">
+<div class="section-title"><h2>How It Works</h2></div>
+<div class="steps">
+    <div class="step"><div class="step-number">1</div><h3>Login</h3><p>Create your citizen account.</p></div>
+    <div class="step"><div class="step-number">2</div><h3>Report</h3><p>Submit issues with images, location and priority.</p></div>
+    <div class="step"><div class="step-number">3</div><h3>Track</h3><p>Follow status updates and view response progress.</p></div>
+</div>
+</div>
+</section>
+<section>
+<div class="container">
+<div class="section-title"><h2>Key Features</h2></div>
+<div class="cards">
+    <div class="card"><h3>Real-time Alerts</h3></div>
+    <div class="card"><h3>Secure Authentication</h3></div>
+    <div class="card"><h3>Admin Analytics</h3></div>
+</div>
+</div>
+</section>
+<section class="cta">
+<div class="container"><h2>Ready to improve your city?</h2><p>Sign up and help make your city safer, cleaner, and smarter.</p><button class="btn btn-primary" onclick="location.href='usersignup.html'">Get Started</button></div>
+</section>
+<footer><p>© 2026 Smart City Project | Developed by Komal and Mansi</p></footer>
+</body>
+</html>

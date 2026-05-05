@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile | Smart City</title>
+<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="theme.css">
+<script defer src="theme.js"></script>
+<script defer src="dashboard.js"></script>
+</head>
+<body>
+<div class="sidebar">
+    <h2>🏙 Smart City</h2>
+    <a href="userdashboard.html">Dashboard</a>
+    <a href="weather-aqi.html">Weather & AQI</a>
+    <a href="emergency-sos.html">Emergency SOS</a>
+    <a href="air-quality-index.html">Air Quality Index</a>
+    <a href="complaint-stats.html">Complaint Stats</a>
+    <a href="smart-assistant.html">Smart Assistant</a>
+    <a href="trending-complaints.html">Trending Complaints</a>
+    <a href="register-complaint.html">Register Complaint</a>
+    <a href="report-traffic-issue.html">Report Traffic Issue</a>
+    <a href="my-traffic-reports.html">My Traffic Reports</a>
+    <a href="my-complaints.html">My Complaints</a>
+    <a class="active" href="profile.html">Profile</a>
+</div>
+<div class="main">
+    <div id="notification" class="notification"></div>
+    <div class="page-header">
+        <div>
+            <h1>Profile</h1>
+            <p>Manage your account details and see your participation status in the Smart City system.</p>
+        </div>
+        <button class="btn" type="button" onclick="loadProfile()">Refresh</button>
+    </div>
+
+    <div class="cards-grid">
+        <div class="card">
+            <h2>Account Details</h2>
+            <p id="profileName">Name: -</p>
+            <p id="profileEmail">Email: -</p>
+            <p id="profilePhone">Phone: -</p>
+        </div>
+        <div class="card">
+            <h2>Civic Contribution</h2>
+            <p id="profilePoints">Points: 0</p>
+            <p id="profileBadge">Badge: Active Citizen</p>
+        </div>
+    </div>
+</div>
+<script>
+async function loadProfile() {
+    try {
+        const data = await apiFetch('/api/profile');
+        document.getElementById('profileName').innerText = `Name: ${data.name || '-'}`;
+        document.getElementById('profileEmail').innerText = `Email: ${data.email || '-'}`;
+        document.getElementById('profilePhone').innerText = `Phone: ${data.mobile || data.phone || '-'}`;
+        document.getElementById('profilePoints').innerText = `Points: ${data.points ?? 0}`;
+        document.getElementById('profileBadge').innerText = `Badge: ${data.badge || 'Active Citizen'}`;
+    } catch (error) {
+        showNotification(error.message || 'Unable to load profile details.', false);
+    }
+}
+
+window.addEventListener('load', () => {
+    loadProfile();
+});
+</script>
+</body>
+</html>
